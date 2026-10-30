@@ -735,7 +735,32 @@ app.post('/api/auth/logout', (req, res) => {
 app.get('/api/auth/me', requireAuth, (req, res) => {
   res.json(getProfileById(req.user.id, true));
 });
+/* ------------------------------------------------------------------ */
+/*  EMOJI PACKS                                                        */
+/* ------------------------------------------------------------------ */
 
+app.get('/api/emoji/packs', requireAuth, (req, res) => {
+  const rows = db.prepare(`
+    SELECT p.*, u.username AS owner_username, u.display_name AS owner_name
+    FROM emoji_packs p LEFT JOIN users u ON u.id = p.owner_id
+    WHERE p.official = 1
+       OR p.owner_id = ?
+       OR (p.is_public = 1 AND ? = 1)
+    ORDER BY p.official DESC, p.created_at DESC
+  `).all(req.user.id, req.user.is_premium ? 1 : 0);
+
+  const packs = rows.map(p => {
+    const emojis = db.prepare('SELECT id, name, file_url FROM emojis WHERE pack_id = ? ORDER BY created_at ASC').all(p.id);
+    return {
+      id: p.id, slug: p.slug, title: p.title, description: p.description || '',
+      official: !!p.official, isPublic: !!p.is_public,
+      ownerId: p.owner_id, ownerUsername: p.owner_username, ownerName: p.owner_name,
+      mine: p.owner_id === req.user.id,
+      emojis: emojis.map(e => ({ id: e.id, name: e.name, url: e.file_url }))
+    };
+  });
+  res.json(packs);
+});
 /* ------------------------------------------------------------------ */
 /*  USERS                                                              */
 /* ------------------------------------------------------------------ */
