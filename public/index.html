@@ -212,6 +212,7 @@
             <input type="file" id="audio-file-input" accept="audio/*" style="display: none;">
             <button class="input-action-btn" id="btn-attach"><i data-lucide="paperclip"></i></button>
             <button class="input-action-btn" id="btn-audio" title="Музыка"><i data-lucide="music"></i></button>
+            <button class="input-action-btn" id="btn-emoji" title="Эмодзи"><i data-lucide="smile"></i></button>
             <button class="input-action-btn" id="btn-stickers" title="Стикеры"><i data-lucide="sticker"></i></button>
             <textarea id="composer-textarea" rows="1" placeholder="Написать сообщение..."></textarea>
             <button class="send-message-btn" id="btn-send"><i data-lucide="arrow-up"></i></button>
@@ -264,6 +265,12 @@
           <div class="nav-icon-bg pink"><i data-lucide="gift"></i></div>
           <span class="nav-title">Подарки</span>
           <span class="nav-badge-pill soft">скоро</span>
+        </button>
+
+        <button class="drawer-nav-item" id="nav-emojis">
+  <div class="nav-icon-bg yellow"><i data-lucide="smile-plus"></i></div>
+  <span class="nav-title">Эмодзи</span>
+  <i data-lucide="chevron-right" class="nav-arrow"></i>
         </button>
 
         <button class="drawer-nav-item" id="nav-store">
@@ -1070,6 +1077,10 @@
           <button class="s-item" data-setting="privacy"><i data-lucide="hand" class="icon blue"></i><span>Конфиденциальность</span></button>
           <button class="s-item" data-setting="devices"><i data-lucide="laptop" class="icon orange"></i><span>Устройства</span></button>
           <button class="s-item" data-setting="security"><i data-lucide="shield-check" class="icon green"></i><span>Безопасность</span></button>
+          <button class="s-item" data-setting="2fa">
+  <i data-lucide="shield" class="icon green"></i><span>Второй пароль</span>
+          </button>
+          
 
           <div class="drawer-divider"></div>
           <button class="s-item" data-setting="appearance"><i data-lucide="palette" class="icon grey"></i><span>Оформление</span></button>
@@ -1456,11 +1467,92 @@
 
   <div id="toast-container"></div>
 
+  <div class="settings-menu-list" id="settings-menu-list">
+          <button class="s-item" data-setting="language"><i data-lucide="globe" class="icon purple"></i><span>Язык</span></button>
+          <button class="s-item" data-setting="privacy"><i data-lucide="hand" class="icon blue"></i><span>Конфиденциальность</span></button>
+          <button class="s-item" data-setting="devices"><i data-lucide="laptop" class="icon orange"></i><span>Устройства</span></button>
+          <button class="s-item" data-setting="security"><i data-lucide="shield-check" class="icon green"></i><span>Безопасность</span></button>
+          <button class="s-item" data-setting="2fa">
+  <i data-lucide="shield" class="icon green"></i><span>Второй пароль</span>
+          </button>
+
+  <!-- ==================== ЭМОДЗИ: МОИ ПАКИ ==================== -->
+<div class="modal-backdrop" id="modal-emoji-packs" style="display: none;">
+  <div class="list-window">
+    <div class="wallet-topbar">
+      <span class="wallet-header-title">Мои эмодзи</span>
+      <button class="win-btn close-btn" data-close="modal-emoji-packs"><i data-lucide="x"></i></button>
+    </div>
+    <div class="list-modal-body">
+      <button class="mac-btn primary-purple" id="btn-create-emoji-pack" style="width:100%;margin-bottom:12px;">
+        <i data-lucide="plus"></i> Создать пак
+      </button>
+      <div id="emoji-packs-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== ЭМОДЗИ: СОЗДАНИЕ ПАКА ==================== -->
+<div class="modal-backdrop" id="modal-create-emoji-pack" style="display: none;">
+  <div class="create-chat-window">
+    <div class="create-chat-topbar">
+      <button class="win-btn" data-close="modal-create-emoji-pack"><i data-lucide="arrow-left"></i></button>
+      <span class="create-chat-title">Новый пак</span>
+      <button class="win-btn close-btn" data-close="modal-create-emoji-pack"><i data-lucide="x"></i></button>
+    </div>
+    <div class="create-chat-body">
+      <label class="gw-field"><span>Slug (латиница)</span>
+        <input type="text" id="pack-slug" maxlength="24" placeholder="pepe">
+      </label>
+      <label class="gw-field"><span>Название</span>
+        <input type="text" id="pack-title" maxlength="40" placeholder="Pepe Collection">
+      </label>
+      <label class="gw-field"><span>Описание</span>
+        <input type="text" id="pack-description" maxlength="200" placeholder="Мои любимые жабы">
+      </label>
+    </div>
+    <div class="create-chat-footer">
+      <button class="mac-btn secondary" data-close="modal-create-emoji-pack">Отмена</button>
+      <button class="mac-btn primary-purple" id="btn-create-pack-submit">Создать</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== ЭМОДЗИ: СОДЕРЖИМОЕ ПАКА ==================== -->
+<div class="modal-backdrop" id="modal-emoji-pack" style="display: none;">
+  <div class="list-window">
+    <div class="wallet-topbar">
+      <span class="wallet-header-title" id="emoji-pack-title">Пак</span>
+      <button class="win-btn close-btn" data-close="modal-emoji-pack"><i data-lucide="x"></i></button>
+    </div>
+    <div class="list-modal-body">
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <input type="text" id="emoji-name-input" placeholder="Имя эмодзи" style="flex:1;">
+        <button class="mac-btn secondary" id="btn-upload-emoji"><i data-lucide="upload"></i> Загрузить</button>
+      </div>
+      <input type="file" id="emoji-file-input" accept="image/png,image/webp,image/gif" style="display:none;">
+      <div id="emoji-grid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(64px,1fr));gap:8px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== ЭМОДЗИ: ПАНЕЛЬ В ЧАТЕ ==================== -->
+<div class="emoji-panel" id="emoji-panel" style="display: none;">
+  <div class="emoji-panel-head">
+    <span>Эмодзи</span>
+    <button id="emoji-panel-close" class="win-btn"><i data-lucide="x"></i></button>
+  </div>
+  <div id="emoji-panel-packs"></div>
+                                   </div>
+
   <script src="/socket.io/socket.io.js"></script>
   <script src="/vendor/pako.min.js"></script>
   <script src="/vendor/lottie.min.js"></script>
   <script src="app.js"></script>
   <script src="social.js"></script>
+
+  <script src="2fa-login.js"></script>
+
 <div id="msg-context-menu" class="msg-context-menu" style="display: none;">
   <button id="ctx-reply-btn" class="ctx-btn"><i data-lucide="reply"></i> Ответить</button>
   <button id="ctx-forward-btn" class="ctx-btn"><i data-lucide="forward"></i> Переслать</button>

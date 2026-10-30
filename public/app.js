@@ -887,7 +887,7 @@ function connectSocket() {
     const idx = currentMessages.findIndex(m => m.id === msg.id);
     if (idx >= 0) currentMessages[idx] = { ...currentMessages[idx], ...msg };
     const bubble = document.querySelector(`.bubble[data-id="${msg.id}"] .msg-text`);
-    if (bubble) bubble.innerHTML = linkify(msg.text || '');
+    if (bubble) bubble.innerHTML = renderTextWithEmoji(msg.text || '');
   });
 
   socket.on('message_reactions', ({ messageId, reactions }) => {
@@ -1485,7 +1485,7 @@ function appendMessage(msg, scroll = true) {
       <span class="reply-quote-text">${escapeHtml(quoteText)}</span>
     </div>`;
   }
-  if (msg.text) inner += `<div class="msg-text">${linkify(msg.text)}</div>`;
+  if (msg.text) inner += `<div class="msg-text">${renderTextWithEmoji(msg.text)}</div>`;
   if (msg.file_type === 'sticker' && msg.file_url) {
     bubble.classList.add('sticker-bubble');
     inner += `<img class="msg-sticker" src="${escapeAttr(msg.file_url)}" alt="Стикер" loading="lazy" draggable="false">`;
@@ -5082,3 +5082,266 @@ function setupMessageLongPress() {
   stream.addEventListener('touchend', clear);
   stream.addEventListener('touchcancel', clear);
 }
+// ======================= EMOJI PACKS =======================
+let emojiCache = new Map();
+let currentPackId = null;
+let emojiPacksCache = [];
+
+async function loadEmojiCache() {
+  try {
+    const res = await fetch('/api/emoji/all', {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(r => r.json());
+    if (res && typeof res === 'object') {
+      emojiCache = new Map(Object.entries(res));
+    }
+  } catch (e) { console.warn('emoji cache', e); }
+}
+
+function renderTextWithEmoji(text) {
+  return linkify(text || '').replace(/:([a-z0-9_]+)\/([a-z0-9_]+):/gi, (full) => {
+    const url = emojiCache.get(full);
+    if (!url) return full;
+    return `<img class="custom-emoji" src="${url}" alt="${full}" draggable="false">`;
+  });
+}
+
+async function loadMyPacks() {
+  const list = document.getElementById('emoji-packs-list');
+  if (!list) return;
+  list.innerHTML = '<p class="empty-feed">Загрузка…</p>';
+  const res = await fetch('/api/emoji/packs', {
+    headers: { Authorization: `Bearer ${token}` }
+  }).then(r => r.json());
+  emojiPacksCache = res || [];
+  if (!res || !res.length) {
+    list.innerHTML = '<p class="empty-feed">Паков нет</p>';
+    return;
+  }
+  list.innerHTML = res.map(p => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:rgba(255,255,255,.06);margin-bottom:8px;">
+      <div style="font-size:20px;">${p.official ? '⭐' : '🎨'}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;">${p.title}</div>
+        <div style="opacity:.6;font-size:12px;">:${p.slug}/ · ${p.emojis.length}</div>
+      </div>
+      <button class="mac-btn secondary" data-open-pack="${p.id}">Открыть</button>
+    </div>
+  `).join('');
+  list.querySelectorAll('[data-open-pack]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pack = res.find(p => p.id === btn.dataset.openPack);
+      if (pack) openPack(pack);
+    });
+  });
+}
+
+function openPack(pack) {
+  currentPackId = pack.id;
+  document.getElementById('emoji-pack-title').textContent = `:${pack.slug}/ — ${pack.title}`;
+  const grid = document.getElementById('emoji-grid');
+  grid.innerHTML = pack.emojis.length
+    ? pack.emojis.map(e => `
+        <div style="padding:4px;border-radius:8px;background:rgba(255,255,255,.06);text-align:center;">
+          <img src="${e.url}" title=":${pack.slug}/${e.name}:" style="width:100%;aspect-ratio:1;object-fit:contain;">
+          <div style="font-size:9px;opacity:.5;overflow:hidden;text-overflow:ellipsis;">${e.name}</div>
+        </div>`).join('')
+    : '<p class="empty-feed">Пак пуст. Загрузите эмодзи.</p>';
+  document.getElementById('modal-emoji-pack').style.display = 'block';
+}
+
+async function renderEmojiPicker() {
+  const host = document.getElementById('emoji-panel-packs');
+  if (!host) return;
+  const packs = await fetch('/api/emoji/packs', {
+    headers: { Authorization: `Bearer ${token}` }
+  }).then(r => r.json());
+  if (!packs || !packs.length) {
+    host.innerHTML = '<p class="empty-feed" style="padding:12px;">Паков нет</p>';
+    return;
+  }
+  host.innerHTML = packs.map(p => `
+    <div class="emoji-picker-pack">
+      <div class="emoji-picker-title">:${p.slug}/ · ${p.title}</div>
+      <div class="emoji-picker-grid">
+        ${p.emojis.map(e => `<button class="emoji-btn" data-emoji=":${p.slug}/${e.name}:" title=":${p.slug}/${e.name}:">
+          <img src="${e.url}" alt="">
+        </button>`).join('')}
+      </div>
+    </div>
+  `).join('');
+  host.querySelectorAll('.emoji-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const ta = document.getElementById('composer-textarea');
+      if (ta) {
+        ta.value += btn.dataset.emoji;
+        ta.focus();
+      }
+    });
+  });
+}
+
+document.getElementById('nav-emojis')?.addEventListener('click', async () => {
+  document.getElementById('modal-emoji-packs').style.display = 'block';
+  await loadMyPacks();
+});
+
+document.getElementById('btn-create-emoji-pack')?.addEventListener('click', () => {
+  const me = typeof currentUser !== 'undefined' ? currentUser : null;
+  if (me && !me.isPremium && !me.isAdmin) {
+    alert('Создавать паки эмодзи может только Runa Premium');
+    return;
+  }
+  document.getElementById('modal-create-emoji-pack').style.display = 'block';
+});
+
+document.getElementById('btn-create-pack-submit')?.addEventListener('click', async () => {
+  const slug = document.getElementById('pack-slug').value.trim().toLowerCase();
+  const title = document.getElementById('pack-title').value.trim();
+  const description = document.getElementById('pack-description').value.trim();
+  const res = await fetch('/api/emoji/packs', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ slug, title, description })
+  }).then(r => r.json());
+  if (res?.id) {
+    document.getElementById('modal-create-emoji-pack').style.display = 'none';
+    await loadEmojiCache();
+    await loadMyPacks();
+  } else {
+    alert(res?.error || 'Ошибка');
+  }
+});
+
+document.getElementById('btn-upload-emoji')?.addEventListener('click', () => {
+  if (!currentPackId) return;
+  document.getElementById('emoji-file-input').click();
+});
+
+document.getElementById('emoji-file-input')?.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file || !currentPackId) return;
+  const name = document.getElementById('emoji-name-input').value.trim().toLowerCase();
+  if (!name) { alert('Введите имя эмодзи'); e.target.value = ''; return; }
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('name', name);
+  const res = await fetch(`/api/emoji/packs/${currentPackId}/upload`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: fd
+  }).then(r => r.json());
+  if (res?.url) {
+    await loadEmojiCache();
+    const packs = await fetch('/api/emoji/packs', {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(r => r.json());
+    const pack = packs.find(p => p.id === currentPackId);
+    if (pack) openPack(pack);
+    document.getElementById('emoji-name-input').value = '';
+  } else {
+    alert(res?.error || 'Ошибка');
+  }
+  e.target.value = '';
+});
+
+document.getElementById('btn-emoji')?.addEventListener('click', async () => {
+  const panel = document.getElementById('emoji-panel');
+  if (!panel) return;
+  const open = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  if (!open) await renderEmojiPicker();
+});
+
+document.getElementById('emoji-panel-close')?.addEventListener('click', () => {
+  document.getElementById('emoji-panel').style.display = 'none';
+});
+
+// Загружаем кэш эмодзи (если уже залогинен)
+if (typeof token !== 'undefined' && token) {
+  loadEmojiCache();
+  }
+// ======================= ВТОРОЙ ПАРОЛЬ (2FA) =======================
+let pending2faUserId = null;
+
+async function render2faPanel() {
+  const body = document.getElementById('2fa-body');
+  if (!body) return;
+  body.innerHTML = '<p style="opacity:.7;font-size:13px;">Загрузка…</p>';
+
+  const status = await fetch('/api/2fa/status', {
+    headers: { Authorization: `Bearer ${token}` }
+  }).then(r => r.json());
+
+  if (status.enabled) {
+    body.innerHTML = `
+      <p style="font-size:13px;color:#30d158;margin-bottom:12px;">✅ Второй пароль включён</p>
+      <p style="opacity:.7;font-size:12px;margin-bottom:12px;">
+        При входе после обычного пароля потребуется ввести второй.
+      </p>
+      <p style="font-size:13px;margin-bottom:6px;"><b>Отключить</b></p>
+      <input type="password" id="2fa-disable-pwd" placeholder="Текущий второй пароль"
+             style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,.06);border:0;color:#fff;margin-bottom:8px;">
+      <button class="mac-btn secondary" id="btn-2fa-disable" style="width:100%;">
+        <i data-lucide="shield-off"></i> Отключить
+      </button>
+    `;
+    document.getElementById('btn-2fa-disable').addEventListener('click', async () => {
+      const pwd = document.getElementById('2fa-disable-pwd').value;
+      const r = await fetch('/api/2fa/disable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ password: pwd })
+      }).then(r => r.json());
+      if (r.ok) { toast('Второй пароль отключён'); render2faPanel(); }
+      else alert(r.error || 'Ошибка');
+    });
+  } else {
+    body.innerHTML = `
+      <p style="opacity:.7;font-size:12px;margin-bottom:12px;">
+        Второй пароль защищает вход: даже если кто-то узнает основной пароль, без второго он не войдёт.
+      </p>
+      <input type="password" id="2fa-new-pwd" placeholder="Второй пароль (мин. 4 символа)"
+             style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,.06);border:0;color:#fff;margin-bottom:8px;">
+      <input type="password" id="2fa-new-pwd2" placeholder="Повторите пароль"
+             style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,.06);border:0;color:#fff;margin-bottom:8px;">
+      <button class="mac-btn primary-purple" id="btn-2fa-enable" style="width:100%;">
+        <i data-lucide="shield-plus"></i> Включить
+      </button>
+    `;
+    document.getElementById('btn-2fa-enable').addEventListener('click', async () => {
+      const pwd = document.getElementById('2fa-new-pwd').value;
+      const pwd2 = document.getElementById('2fa-new-pwd2').value;
+      const r = await fetch('/api/2fa/enable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ password: pwd, confirm: pwd2 })
+      }).then(r => r.json());
+      if (r.ok) { toast('Второй пароль включён'); render2faPanel(); }
+      else alert(r.error || 'Ошибка');
+    });
+  }
+}
+
+document.querySelector('[data-setting="2fa"]')?.addEventListener('click', () => {
+  document.getElementById('modal-2fa').style.display = 'block';
+  render2faPanel();
+});
+
+document.getElementById('btn-2fa-login-submit')?.addEventListener('click', async () => {
+  const pwd = document.getElementById('2fa-login-input').value;
+  const err = document.getElementById('2fa-login-error');
+  err.style.display = 'none';
+  const r = await fetch('/api/auth/login/2fa', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId: pending2faUserId, password: pwd })
+  }).then(r => r.json());
+  if (r.token) {
+    localStorage.setItem('token', r.token);
+    location.reload();
+  } else {
+    err.textContent = r.error || 'Ошибка';
+    err.style.display = 'block';
+  }
+});

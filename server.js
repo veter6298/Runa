@@ -30,7 +30,12 @@ const imageUpload = multer({
   limits: { fileSize: 15 * 1024 * 1024 },
   fileFilter: (req, file, cb) => cb(null, /^image\//.test(file.mimetype))
 });
-
+const upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 } });
+const imageUpload = multer({
+  storage,
+  limits: { fileSize: 15 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => cb(null, /^image\//.test(file.mimetype))
+});
 app.use(express.json({ limit: '2mb' }));
 const publicDir = path.join(__dirname, 'public');
 app.use(express.static(publicDir, {
@@ -162,6 +167,7 @@ const ensureColumn = (table, column, definition) => {
 };
 
 ensureColumn('users', 'rubies', 'INTEGER DEFAULT 0');
+ensureColumn('users', 'second_password', "TEXT DEFAULT ''");
 ensureColumn('users', 'profile_track', "TEXT DEFAULT ''");
 ensureColumn('users', 'mops_balance', 'REAL DEFAULT 0.0');
 ensureColumn('users', 'show_balance_in_profile', 'INTEGER DEFAULT 1');
@@ -347,13 +353,18 @@ const publicUser = (u) => u ? {
 } : null;
 
 const isOnline = (id) => onlineSockets.has(id);
+function canCreateEmojiPacks(user) {
+  if (!user) return false;
+  if (user.is_admin) return true;
+  return !!user.is_premium;
+}
 
 function badgesFor(userId) {
   return db.prepare('SELECT id, icon, title, color FROM badges WHERE user_id = ? ORDER BY created_at ASC').all(userId)
     .map(b => ({ ...b, color: b.color || '' }));
 }
 
-function nftFor(userId) {
+function nftFor(userI d) {
   return db.prepare(`SELECT id, username, for_sale, price, listed_at
     FROM nft_usernames WHERE user_id = ? ORDER BY created_at ASC`).all(userId)
     .map(n => ({ id: n.id, username: n.username, forSale: !!n.for_sale, price: n.price || 0, listedAt: n.listed_at || null }));
@@ -719,6 +730,21 @@ app.post('/api/auth/login', (req, res) => {
   res.json({ token, user: getProfileById(user.id, true) });
 });
 
+app.post('/api/auth/login/2fa', (req, res) => {
+  const userId = String(req.body.userId || '');
+  const password = String(req.body.password || '');
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+
+  if (!user || !user.second_password) return res.status(400).json({ error: '2FA не включена' });
+  if (!checkPassword(password, user.second_password)) {
+    return res.status(401).json({ error: 'Неверный второй пароль' });
+  }
+  if (user.banned) return res.status(403).json({ error: 'Аккаунт заблокирован' });
+
+  const token = createSession(user.id);
+  res.json({ token, user: getProfileById(user.id, true) });
+});
+
 app.post('/api/auth/logout', (req, res) => {
   const token = tokenFromReq(req);
   if (token) db.prepare('DELETE FROM sessions WHERE token = ?').run(token);
@@ -727,6 +753,153 @@ app.post('/api/auth/logout', (req, res) => {
 
 app.get('/api/auth/me', requireAuth, (req, res) => {
   res.json(getProfileById(req.user.id, true));
+});
+/* ------------------------------------------------------------------ */
+/*  EMOJI PACKS                                                        */
+/* ------------------------------------------------------------------ */
+
+app.get('/api/emoji/packs', requireAuth, (req, res) => {
+  const rows = db.prepare(`
+    SELECT p.*, u.username AS owner_username, u.display_name AS owner_name
+    FROM emoji_packs p LEFT JOIN users u ON u.id = p.owner_id
+    WHERE p.official = 1
+       OR p.owner_id = ?
+       OR (p.is_public = 1 AND ? = 1)
+    ORDER BY p.official DESC, p.created_at DESC
+  `).all(req.user.id, req.user.is_premium ? 1 : 0);
+
+  const packs = rows.map(p => {
+    const emojis = db.prepare('SELECT id, name, file_url FROM emojis WHERE pack_id = ? ORDER BY created_at ASC').all(p.id);
+    return {
+      id: p.id, slug: p.slug, title: p.title, description: p.description || '',
+      official: !!p.official, isPublic: !!p.is_public,
+      ownerId: p.owner_id, ownerUsername: p.owner_username, ownerName: p.owner_name,
+      mine: p.owner_id === req.user.id,
+      emojis: emojis.map(e => ({ id: e.id, name: e.name, url: e.file_url }))
+    };
+  });
+  res.json(packs);
+});
+app.delete('/api/emoji/:id', requireAuth, (req, res) => {
+  const emoji = db.prepare(`
+    SELECT e.*, p.owner_id FROM emojis e
+    JOIN emoji_packs p ON p.id = e.pack_id
+    WHERE e.id = ?
+  `).get(req.params.id);
+
+  if (!emoji) return res.status(404).json({ error: 'Эмодзи не найдено' });
+  if (emoji.owner_id !== req.user.id && !req.user.is_admin) {
+    return res.status(403).json({ error: 'Это не ваш эмодзи' });
+  }
+
+  db.prepare('DELETE FROM emojis WHERE id = ?').run(emoji.id);
+  res.json({ ok: true });
+});
+app.post('/api/emoji/packs/:id/upload', requireAuth, emojiUpload.single('file'), (req, res) => {
+  const pack = db.prepare('SELECT * FROM emoji_packs WHERE id = ?').get(req.params.id);
+  if (!pack) return res.status(404).json({ error: 'Пак не найден' });
+  if (pack.owner_id !== req.user.id && !req.user.is_admin) {
+    return res.status(403).json({ error: 'Это не ваш пак' });
+  }
+  if (!req.file) return res.status(400).json({ error: 'Выберите картинку (png/webp/gif)' });
+
+  const name = String(req.body.name || '').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, EMOJI_LIMITS.maxEmojiName);
+  if (!name) return res.status(400).json({ error: 'Имя эмодзи обязательно (латиница/цифры/_)' });
+
+  const count = db.prepare('SELECT COUNT(*) c FROM emojis WHERE pack_id = ?').get(pack.id).c;
+  if (count >= EMOJI_LIMITS.maxEmojisPerPack) {
+    return res.status(400).json({ error: `Максимум ${EMOJI_LIMITS.maxEmojisPerPack} эмодзи в паке` });
+  }
+  if (db.prepare('SELECT id FROM emojis WHERE pack_id = ? AND name = ?').get(pack.id, name)) {
+    return res.status(400).json({ error: 'Такое имя уже есть' });
+  }
+
+  const id = uuidv4();
+  const url = `/uploads/${req.file.filename}`;
+  db.prepare('INSERT INTO emojis (id, pack_id, name, file_url) VALUES (?, ?, ?, ?)')
+    .run(id, pack.id, name, url);
+
+  res.json({ ok: true, id, name, url });
+});
+app.delete('/api/emoji/packs/:id', requireAuth, (req, res) => {
+  const pack = db.prepare('SELECT * FROM emoji_packs WHERE id = ?').get(req.params.id);
+  if (!pack) return res.status(404).json({ error: 'Пак не найден' });
+  if (pack.owner_id !== req.user.id && !req.user.is_admin) {
+    return res.status(403).json({ error: 'Это не ваш пак' });
+  }
+  db.prepare('DELETE FROM emojis WHERE pack_id = ?').run(pack.id);
+  db.prepare('DELETE FROM emoji_packs WHERE id = ?').run(pack.id);
+  res.json({ ok: true });
+});
+app.get('/api/emoji/all', requireAuth, (req, res) => {
+  const rows = db.prepare(`
+    SELECT p.slug AS pack_slug, e.name, e.file_url
+    FROM emojis e JOIN emoji_packs p ON p.id = e.pack_id
+    WHERE p.official = 1
+       OR p.owner_id = ?
+       OR (p.is_public = 1 AND ? = 1)
+  `).all(req.user.id, req.user.is_premium ? 1 : 0);
+
+  const map = {};
+  rows.forEach(r => { map[`:${r.pack_slug}/${r.name}:`] = r.file_url; });
+  res.json(map);
+});
+app.get('/api/emoji/all', requireAuth, (req, res) => {
+  const rows = db.prepare(`
+    SELECT p.slug AS pack_slug, e.name, e.file_url
+    FROM emojis e JOIN emoji_packs p ON p.id = e.pack_id
+    WHERE p.official = 1
+       OR p.owner_id = ?
+       OR (p.is_public = 1 AND ? = 1)
+  `).all(req.user.id, req.user.is_premium ? 1 : 0);
+
+  const map = {};
+  rows.forEach(r => { map[`:${r.pack_slug}/${r.name}:`] = r.file_url; });
+  res.json(map);
+});
+
+/* ------------------------------------------------------------------ */
+/*  ВТОРОЙ ПАРОЛЬ (2FA)                                                */
+/* ------------------------------------------------------------------ */
+
+/* Статус */
+app.get('/api/2fa/status', requireAuth, (req, res) => {
+  const u = db.prepare('SELECT second_password FROM users WHERE id = ?').get(req.user.id);
+  res.json({ enabled: !!(u && u.second_password) });
+});
+
+/* Включить второй пароль */
+app.post('/api/2fa/enable', requireAuth, (req, res) => {
+  const password = String(req.body.password || '');
+  const confirm = String(req.body.confirm || '');
+
+  if (password.length < 4) {
+    return res.status(400).json({ error: 'Второй пароль — минимум 4 символа' });
+  }
+  if (password !== confirm) {
+    return res.status(400).json({ error: 'Пароли не совпадают' });
+  }
+  const current = db.prepare('SELECT password FROM users WHERE id = ?').get(req.user.id);
+  if (checkPassword(password, current.password)) {
+    return res.status(400).json({ error: 'Второй пароль не должен совпадать с основным' });
+  }
+
+  db.prepare('UPDATE users SET second_password = ? WHERE id = ?')
+    .run(hashPassword(password), req.user.id);
+
+  res.json({ ok: true });
+});
+
+/* Отключить (нужно ввести текущий второй пароль) */
+app.post('/api/2fa/disable', requireAuth, (req, res) => {
+  const password = String(req.body.password || '');
+  const u = db.prepare('SELECT second_password FROM users WHERE id = ?').get(req.user.id);
+  if (!u || !u.second_password) return res.status(400).json({ error: '2FA не включена' });
+  if (!checkPassword(password, u.second_password)) {
+    return res.status(400).json({ error: 'Неверный второй пароль' });
+  }
+  db.prepare("UPDATE users SET second_password = '' WHERE id = ?").run(req.user.id);
+  res.json({ ok: true });
 });
 
 /* ------------------------------------------------------------------ */

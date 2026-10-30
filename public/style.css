@@ -6583,5 +6583,62 @@ body.story-viewer-open { overflow: hidden; }
 .profile-track.own .pt-clear { display: block; }
 
 .track-edit-row {
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: center; gap: 8px
+  flex-wrap: wrap;
+                                        }
+/* ===== Кастомные эмодзи в тексте ===== */
+.custom-emoji {
+  display: inline-block;
+  width: 1.4em;
+  height: 1.4em;
+  vertical-align: -0.3em;
+  margin: 0 1px;
+  object-fit: contain;
+}
+
+/* ===== Панель эмодзи в чате ===== */
+.emoji-panel {
+  position: absolute;
+  bottom: 56px;
+  left: 8px;
+  right: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  background: #1a1a1f;
+  border-radius: 14px;
+  padding: 10px;
+  z-index: 50;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .4);
+}
+.emoji-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 13px;
+  opacity: .8;
+}
+.emoji-picker-title {
+  font-size: 11px;
+  opacity: .5;
+  margin: 8px 0 4px;
+}
+.emoji-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 40px);
+  gap: 6px;
+}
+.emoji-btn {
+  width: 40px;
+  height: 40px;
+  padding: 2px;
+  background: rgba(255, 255, 255, .05);
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.emoji-btn:hover { background: rgba(255, 255, 255, .12); }
+.emoji-btn img { width: 100%; height: 100%; object-fit: contain; }
+}
+
   flex-wrap: wrap;
