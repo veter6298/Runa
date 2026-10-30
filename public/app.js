@@ -4970,3 +4970,187 @@ function setupMessageLongPress() {
   stream.addEventListener('touchend', clear);
   stream.addEventListener('touchcancel', clear);
 }
+// ======================= EMOJI PACKS =======================
+let emojiCache = new Map();
+let currentPackId = null;
+let emojiPacksCache = [];
+
+async function loadEmojiCache() {
+  try {
+    const res = await fetch('/api/emoji/all', {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(r => r.json());
+    if (res && typeof res === 'object') {
+      emojiCache = new Map(Object.entries(res));
+    }
+  } catch (e) { console.warn('emoji cache', e); }
+}
+
+function renderTextWithEmoji(text) {
+  const escaped = String(text || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+  return escaped.replace(/:([a-z0-9_]+)\/([a-z0-9_]+):/gi, (full) => {
+    const url = emojiCache.get(full);
+    if (!url) return full;
+    return `<img class="custom-emoji" src="${url}" alt="${full}" draggable="false">`;
+  });
+}
+
+async function loadMyPacks() {
+  const list = document.getElementById('emoji-packs-list');
+  if (!list) return;
+  list.innerHTML = '<p class="empty-feed">Загрузка…</p>';
+  const res = await fetch('/api/emoji/packs', {
+    headers: { Authorization: `Bearer ${token}` }
+  }).then(r => r.json());
+  emojiPacksCache = res || [];
+  if (!res || !res.length) {
+    list.innerHTML = '<p class="empty-feed">Паков нет</p>';
+    return;
+  }
+  list.innerHTML = res.map(p => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:rgba(255,255,255,.06);margin-bottom:8px;">
+      <div style="font-size:20px;">${p.official ? '⭐' : '🎨'}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;">${p.title}</div>
+        <div style="opacity:.6;font-size:12px;">:${p.slug}/ · ${p.emojis.length}</div>
+      </div>
+      <button class="mac-btn secondary" data-open-pack="${p.id}">Открыть</button>
+    </div>
+  `).join('');
+  list.querySelectorAll('[data-open-pack]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pack = res.find(p => p.id === btn.dataset.openPack);
+      if (pack) openPack(pack);
+    });
+  });
+}
+
+function openPack(pack) {
+  currentPackId = pack.id;
+  document.getElementById('emoji-pack-title').textContent = `:${pack.slug}/ — ${pack.title}`;
+  const grid = document.getElementById('emoji-grid');
+  grid.innerHTML = pack.emojis.length
+    ? pack.emojis.map(e => `
+        <div style="padding:4px;border-radius:8px;background:rgba(255,255,255,.06);text-align:center;">
+          <img src="${e.url}" title=":${pack.slug}/${e.name}:" style="width:100%;aspect-ratio:1;object-fit:contain;">
+          <div style="font-size:9px;opacity:.5;overflow:hidden;text-overflow:ellipsis;">${e.name}</div>
+        </div>`).join('')
+    : '<p class="empty-feed">Пак пуст. Загрузите эмодзи.</p>';
+  document.getElementById('modal-emoji-pack').style.display = 'block';
+}
+
+async function renderEmojiPicker() {
+  const host = document.getElementById('emoji-panel-packs');
+  if (!host) return;
+  const packs = await fetch('/api/emoji/packs', {
+    headers: { Authorization: `Bearer ${token}` }
+  }).then(r => r.json());
+  if (!packs || !packs.length) {
+    host.innerHTML = '<p class="empty-feed" style="padding:12px;">Паков нет</p>';
+    return;
+  }
+  host.innerHTML = packs.map(p => `
+    <div class="emoji-picker-pack">
+      <div class="emoji-picker-title">:${p.slug}/ · ${p.title}</div>
+      <div class="emoji-picker-grid">
+        ${p.emojis.map(e => `<button class="emoji-btn" data-emoji=":${p.slug}/${e.name}:" title=":${p.slug}/${e.name}:">
+          <img src="${e.url}" alt="">
+        </button>`).join('')}
+      </div>
+    </div>
+  `).join('');
+  host.querySelectorAll('.emoji-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const ta = document.getElementById('composer-textarea');
+      if (ta) {
+        ta.value += btn.dataset.emoji;
+        ta.focus();
+      }
+    });
+  });
+}
+
+document.getElementById('nav-emojis')?.addEventListener('click', async () => {
+  document.getElementById('modal-emoji-packs').style.display = 'block';
+  await loadMyPacks();
+});
+
+document.getElementById('btn-create-emoji-pack')?.addEventListener('click', () => {
+  const me = typeof currentUser !== 'undefined' ? currentUser : null;
+  if (me && !me.isPremium && !me.isAdmin) {
+    alert('Создавать паки эмодзи может только Runa Premium');
+    return;
+  }
+  document.getElementById('modal-create-emoji-pack').style.display = 'block';
+});
+
+document.getElementById('btn-create-pack-submit')?.addEventListener('click', async () => {
+  const slug = document.getElementById('pack-slug').value.trim().toLowerCase();
+  const title = document.getElementById('pack-title').value.trim();
+  const description = document.getElementById('pack-description').value.trim();
+  const res = await fetch('/api/emoji/packs', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ slug, title, description })
+  }).then(r => r.json());
+  if (res?.id) {
+    document.getElementById('modal-create-emoji-pack').style.display = 'none';
+    await loadEmojiCache();
+    await loadMyPacks();
+  } else {
+    alert(res?.error || 'Ошибка');
+  }
+});
+
+document.getElementById('btn-upload-emoji')?.addEventListener('click', () => {
+  if (!currentPackId) return;
+  document.getElementById('emoji-file-input').click();
+});
+
+document.getElementById('emoji-file-input')?.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file || !currentPackId) return;
+  const name = document.getElementById('emoji-name-input').value.trim().toLowerCase();
+  if (!name) { alert('Введите имя эмодзи'); e.target.value = ''; return; }
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('name', name);
+  const res = await fetch(`/api/emoji/packs/${currentPackId}/upload`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: fd
+  }).then(r => r.json());
+  if (res?.url) {
+    await loadEmojiCache();
+    const packs = await fetch('/api/emoji/packs', {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(r => r.json());
+    const pack = packs.find(p => p.id === currentPackId);
+    if (pack) openPack(pack);
+    document.getElementById('emoji-name-input').value = '';
+  } else {
+    alert(res?.error || 'Ошибка');
+  }
+  e.target.value = '';
+});
+
+document.getElementById('btn-emoji')?.addEventListener('click', async () => {
+  const panel = document.getElementById('emoji-panel');
+  if (!panel) return;
+  const open = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  if (!open) await renderEmojiPicker();
+});
+
+document.getElementById('emoji-panel-close')?.addEventListener('click', () => {
+  document.getElementById('emoji-panel').style.display = 'none';
+});
+
+// Загружаем кэш эмодзи (если уже залогинен)
+if (typeof token !== 'undefined' && token) {
+  loadEmojiCache();
+  }
