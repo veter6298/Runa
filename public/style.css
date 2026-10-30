@@ -6441,6 +6441,108 @@ body.story-viewer-open { overflow: hidden; }
 .cs-gw-main { flex: 1 1 150px; }
 .cs-gw-actions { margin-left: auto; flex-wrap: wrap; }
 .cs-mini-btn { white-space: nowrap; }
+
+/* ==================================================================
+   NFT-ФРАЗЫ: шанс за общение, коллекция и маркет
+   ================================================================== */
+.nft-phrase-backdrop {
+  position: fixed; inset: 0; z-index: 2500; display: flex; align-items: center; justify-content: center;
+  padding: 16px; background: rgba(3, 4, 12, .78); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+}
+.nft-phrase-window {
+  position: relative; isolation: isolate; width: min(440px, 100%); max-height: calc(100dvh - 32px);
+  overflow-y: auto; padding: 24px 30px 26px; text-align: center; color: #f8f7ff;
+  border: 1px solid rgba(199, 178, 255, .22); border-radius: 28px;
+  background: linear-gradient(155deg, #17162e 0%, #111320 55%, #10111a 100%);
+  box-shadow: 0 32px 100px rgba(0, 0, 0, .65), inset 0 1px rgba(255, 255, 255, .08);
+  animation: modalIn .28s var(--ease-spring) both;
+}
+.nft-phrase-glow {
+  position: absolute; z-index: -1; inset: 0 0 auto; height: 260px; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 15%, rgba(126, 93, 244, .24), transparent 68%);
+}
+.nft-phrase-topline {
+  display: flex; justify-content: space-between; align-items: center; color: #a99cbf;
+  font-size: 9px; font-weight: 800; letter-spacing: .16em;
+}
+.nft-phrase-topline span:last-child { color: #d5baff; font-size: 16px; }
+.nft-phrase-emblem {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  width: 76px; height: 76px; margin: 20px auto 18px; border-radius: 25px; transform: rotate(-8deg);
+  background: linear-gradient(140deg, #d9b5ff, #8e6aef 45%, #496bdb);
+  box-shadow: 0 14px 35px rgba(117, 85, 231, .35), inset 0 1px 2px rgba(255, 255, 255, .7);
+}
+.nft-phrase-emblem span { color: #fff; font-family: Georgia, serif; font-size: 70px; line-height: .6; transform: translateY(15px); }
+.nft-phrase-emblem i { position: absolute; right: -8px; top: -9px; font-size: 23px; font-style: normal; color: #ffdf96; transform: rotate(8deg); }
+.nft-phrase-stage[hidden], .nft-phrase-stage [hidden] { display: none; }
+.nft-phrase-kicker { margin: 0 0 8px; color: #c2a5ff; font-size: 10px; letter-spacing: .18em; font-weight: 800; }
+.nft-phrase-stage h2 { margin: 0; color: #fff; font-size: 25px; line-height: 1.2; letter-spacing: -.04em; }
+.nft-phrase-stage > p:not(.nft-phrase-kicker):not(.nft-phrase-result) {
+  max-width: 300px; margin: 10px auto 22px; color: #adaabd; font-size: 13px; line-height: 1.55;
+}
+#nft-phrase-form { text-align: left; }
+#nft-phrase-form label { display: block; margin: 0 0 8px 2px; color: #ded8ef; font-size: 12px; font-weight: 700; }
+#nft-phrase-input {
+  width: 100%; box-sizing: border-box; padding: 14px 15px; border-radius: 14px; outline: none;
+  border: 1px solid rgba(202, 190, 241, .2); background: rgba(5, 6, 14, .45); color: #fff; font-size: 14px;
+}
+#nft-phrase-input::placeholder { color: #777589; }
+#nft-phrase-input:focus { border-color: #b18dfb; box-shadow: 0 0 0 3px rgba(166, 127, 247, .14); }
+.nft-phrase-input-meta { display: flex; justify-content: space-between; margin: 7px 2px 17px; color: #888497; font-size: 10px; }
+.nft-phrase-primary {
+  display: flex; width: 100%; align-items: center; justify-content: center; gap: 10px; min-height: 48px;
+  border: 0; border-radius: 14px; cursor: pointer; color: #161122; font-size: 13px; font-weight: 800;
+  background: linear-gradient(105deg, #c9a7ff, #a2b6ff); box-shadow: 0 10px 26px rgba(133, 101, 231, .25);
+  transition: filter .2s, transform .2s;
+}
+.nft-phrase-primary:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+.nft-phrase-primary:focus-visible, .nft-phrase-skip:focus-visible, .profile-phrase-action:focus-visible, .nft-market-tabs button:focus-visible { outline: 2px solid #d4bfff; outline-offset: 3px; }
+.nft-phrase-primary:disabled, .nft-phrase-skip:disabled { opacity: .5; cursor: wait; }
+.nft-phrase-skip { margin: 15px 0 10px; border: 0; background: none; color: #b5afc7; cursor: pointer; font-size: 12px; }
+.nft-phrase-skip:hover { color: #fff; }
+.nft-phrase-footnote { display: block; color: #817c90; font-size: 10px; line-height: 1.5; }
+.nft-phrase-reel-frame {
+  display: flex; align-items: center; justify-content: center; gap: 15px; margin: 24px auto 18px;
+}
+.nft-phrase-reel-pointer { color: #cbb0ff; font-size: 20px; }
+.nft-phrase-reel-viewport {
+  width: 170px; height: 56px; overflow: hidden; border: 1px solid rgba(192, 167, 255, .35); border-radius: 15px;
+  background: rgba(5, 6, 14, .48); box-shadow: 0 0 35px rgba(140, 100, 236, .15), inset 0 0 20px rgba(136, 108, 227, .1);
+}
+.nft-phrase-reel-item { height: 56px; display: flex; align-items: center; justify-content: center; font-size: 23px; font-weight: 900; letter-spacing: .12em; }
+.nft-phrase-reel-item.yes { color: #b6f4d4; }
+.nft-phrase-reel-item.no { color: #ffc4c9; }
+.nft-phrase-result { min-height: 40px; color: #d5cde2; font-size: 13px; line-height: 1.5; }
+.nft-phrase-game .nft-phrase-primary { margin-top: 16px; }
+.nft-market-tabs { display: flex; gap: 5px; padding: 4px; margin-bottom: 14px; border: 1px solid rgba(255, 255, 255, .07); border-radius: 14px; background: rgba(255, 255, 255, .035); }
+.nft-market-tabs button { flex: 1; border: 0; border-radius: 10px; padding: 10px 8px; background: transparent; color: var(--text-gray); font-size: 12px; font-weight: 700; cursor: pointer; }
+.nft-market-tabs button.active { background: rgba(168, 132, 255, .17); color: #f1e9ff; }
+.nft-market-tabs button span { color: #d5baff; }
+.nft-phrase-market-hero { background: linear-gradient(125deg, rgba(155, 105, 244, .17), rgba(72, 116, 220, .1)); }
+.nft-phrase-lot-icon { font-family: Georgia, serif; font-size: 27px; color: #d7b4ff; background: rgba(167, 123, 244, .15); border-color: rgba(180, 137, 250, .23); }
+.nft-phrase-lot-name { white-space: normal; overflow-wrap: anywhere; line-height: 1.35; }
+.profile-phrase-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.profile-phrase-card {
+  display: flex; flex-direction: column; min-width: 0; padding: 13px; border-radius: 15px; text-align: left;
+  border: 1px solid rgba(188, 151, 255, .18); background: linear-gradient(150deg, rgba(142, 104, 220, .14), rgba(65, 87, 157, .08));
+}
+.profile-phrase-label { display: flex; justify-content: space-between; gap: 4px; color: #c5aaff; font-size: 9px; font-weight: 800; letter-spacing: .06em; }
+.profile-phrase-label span:last-child { color: #9992ad; }
+.profile-phrase-card p { flex: 1; margin: 13px 0; color: #f7f3ff; font-size: 13px; font-weight: 650; line-height: 1.45; overflow-wrap: anywhere; }
+.profile-phrase-footer { display: flex; flex-direction: column; gap: 4px; color: #b1a4cc; font-size: 10px; }
+.profile-phrase-footer small { color: #a8a0b4; font-size: 10px; overflow-wrap: anywhere; }
+.profile-phrase-action { margin-top: 10px; padding: 7px 9px; border: 1px solid rgba(190, 152, 255, .32); border-radius: 9px; background: rgba(161, 115, 237, .13); color: #e1ceff; font-size: 11px; font-weight: 700; cursor: pointer; }
+.profile-phrase-action:hover { background: rgba(161, 115, 237, .25); }
+@media (max-width: 420px) {
+  .nft-phrase-window { padding: 20px 20px 22px; border-radius: 23px; }
+  .nft-phrase-emblem { width: 65px; height: 65px; margin: 14px auto; }
+  .nft-phrase-stage h2 { font-size: 22px; }
+  .profile-bottom-tabs { gap: 2px; }
+  .profile-bottom-tab { gap: 4px; padding: 9px 4px; font-size: 11px; }
+  .profile-bottom-tab svg.lucide { width: 13px; height: 13px; }
+  .profile-bottom-tab em { min-width: 15px; height: 15px; padding: 0 3px; font-size: 9px; }
+}
+@media (max-width: 340px) { .profile-phrase-grid { grid-template-columns: 1fr; } }
 /* ===== Аудио в чате ===== */
 .audio-msg {
   display: flex; align-items: center; gap: 10px;
@@ -6481,7 +6583,7 @@ body.story-viewer-open { overflow: hidden; }
 .profile-track.own .pt-clear { display: block; }
 
 .track-edit-row {
-  display: flex; align-items: center; gap: 8px;
+  display: flex; align-items: center; gap: 8px
   flex-wrap: wrap;
                                         }
 /* ===== Кастомные эмодзи в тексте ===== */
@@ -6538,3 +6640,5 @@ body.story-viewer-open { overflow: hidden; }
 .emoji-btn:hover { background: rgba(255, 255, 255, .12); }
 .emoji-btn img { width: 100%; height: 100%; object-fit: contain; }
 }
+
+  flex-wrap: wrap;

@@ -4,7 +4,8 @@
   "description": "Telegram-like messenger with Apple Liquid Glass UI and SQLite persistence",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test tests/nft-phrases.test.js tests/server-nft-phrases.test.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -14,5 +15,8 @@
     "multer": "^1.4.5-lts.1",
     "socket.io": "^4.8.1",
     "uuid": "^11.0.5"
+  },
+  "devDependencies": {
+    "socket.io-client": "^4.8.4"
   }
 }
