@@ -761,6 +761,21 @@ app.get('/api/emoji/packs', requireAuth, (req, res) => {
   });
   res.json(packs);
 });
+app.delete('/api/emoji/:id', requireAuth, (req, res) => {
+  const emoji = db.prepare(`
+    SELECT e.*, p.owner_id FROM emojis e
+    JOIN emoji_packs p ON p.id = e.pack_id
+    WHERE e.id = ?
+  `).get(req.params.id);
+
+  if (!emoji) return res.status(404).json({ error: 'Эмодзи не найдено' });
+  if (emoji.owner_id !== req.user.id && !req.user.is_admin) {
+    return res.status(403).json({ error: 'Это не ваш эмодзи' });
+  }
+
+  db.prepare('DELETE FROM emojis WHERE id = ?').run(emoji.id);
+  res.json({ ok: true });
+});
 app.post('/api/emoji/packs/:id/upload', requireAuth, emojiUpload.single('file'), (req, res) => {
   const pack = db.prepare('SELECT * FROM emoji_packs WHERE id = ?').get(req.params.id);
   if (!pack) return res.status(404).json({ error: 'Пак не найден' });
