@@ -727,6 +727,21 @@ app.post('/api/auth/login', (req, res) => {
   res.json({ token, user: getProfileById(user.id, true) });
 });
 
+app.post('/api/auth/login/2fa', (req, res) => {
+  const userId = String(req.body.userId || '');
+  const password = String(req.body.password || '');
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+
+  if (!user || !user.second_password) return res.status(400).json({ error: '2FA не включена' });
+  if (!checkPassword(password, user.second_password)) {
+    return res.status(401).json({ error: 'Неверный второй пароль' });
+  }
+  if (user.banned) return res.status(403).json({ error: 'Аккаунт заблокирован' });
+
+  const token = createSession(user.id);
+  res.json({ token, user: getProfileById(user.id, true) });
+});
+
 app.post('/api/auth/logout', (req, res) => {
   const token = tokenFromReq(req);
   if (token) db.prepare('DELETE FROM sessions WHERE token = ?').run(token);
