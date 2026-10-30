@@ -29,7 +29,12 @@ const imageUpload = multer({
   limits: { fileSize: 15 * 1024 * 1024 },
   fileFilter: (req, file, cb) => cb(null, /^image\//.test(file.mimetype))
 });
-
+const upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 } });
+const imageUpload = multer({
+  storage,
+  limits: { fileSize: 15 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => cb(null, /^image\//.test(file.mimetype))
+});
 app.use(express.json({ limit: '2mb' }));
 const publicDir = path.join(__dirname, 'public');
 app.use(express.static(publicDir, {
@@ -346,13 +351,25 @@ const publicUser = (u) => u ? {
 } : null;
 
 const isOnline = (id) => onlineSockets.has(id);
+const EMOJI_LIMITS = {
+  maxPacksPerUser: 3,
+  maxEmojisPerPack: 30,
+  maxEmojiSize: 256 * 1024,
+  maxEmojiName: 32
+};
+
+const emojiUpload = multer({
+  storage,
+  limits: { fileSize: EMOJI_LIMITS.maxEmojiSize },
+  fileFilter: (req, file, cb) => cb(null, /^image\/(png|webp|gif|jpeg)$/.test(file.mimetype))
+});
 
 function badgesFor(userId) {
   return db.prepare('SELECT id, icon, title, color FROM badges WHERE user_id = ? ORDER BY created_at ASC').all(userId)
     .map(b => ({ ...b, color: b.color || '' }));
 }
 
-function nftFor(userId) {
+function nftFor(userI d) {
   return db.prepare(`SELECT id, username, for_sale, price, listed_at
     FROM nft_usernames WHERE user_id = ? ORDER BY created_at ASC`).all(userId)
     .map(n => ({ id: n.id, username: n.username, forSale: !!n.for_sale, price: n.price || 0, listedAt: n.listed_at || null }));
