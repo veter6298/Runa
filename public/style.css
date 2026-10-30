@@ -1,29 +1,170 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rubik:wght@400;500;600;700;800&family=Press+Start+2P&display=swap');
+/* ==========================================================================
+   MATERIAL DESIGN 3 (M3) — MONOCHROME BLACK & WHITE DESIGN SYSTEM
+   Runa Messenger UI Refresh
+   ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Roboto+Mono:wght@400;500&display=swap');
 
 :root {
-  --bg-deep-black: #000000;
-  --bg-sidebar: #0a0a0c;
-  --bg-card-dark: #121216;
-  --bg-card-inner: #18181c;
-  --bg-hover: #1f1f24;
-  
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-focus: #0A84FF;
-  
-  --apple-blue: #0A84FF;
-  --apple-green: #30D158;
-  --apple-purple: #BF5AF2;
-  --apple-red: #FF453A;
-  --apple-orange: #FF9F0A;
-  --apple-cyan: #64D2FF;
-  --apple-gold: #FFD60A;
-  
-  --text-white: #FFFFFF;
-  --text-gray: #8E8E93;
-  --text-dim: #636366;
-  
-  --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Helvetica Neue", sans-serif;
+  /* --- M3 Typography Scale --- */
+  --font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'Roboto Mono', 'SFMono-Regular', Consolas, monospace;
+
+  /* --- M3 Monochrome Surface Containers (OLED Dark Mode) --- */
+  --md-sys-color-surface: #000000;
+  --md-sys-color-surface-dim: #0a0a0c;
+  --md-sys-color-surface-bright: #2d2d30;
+  --md-sys-color-surface-container-lowest: #000000;
+  --md-sys-color-surface-container-low: #111113;
+  --md-sys-color-surface-container: #171719;
+  --md-sys-color-surface-container-high: #212124;
+  --md-sys-color-surface-container-highest: #2b2b2e;
+  --md-sys-color-surface-variant: #262629;
+
+  /* --- M3 Monochrome Core Accents --- */
+  --md-sys-color-primary: #FFFFFF;
+  --md-sys-color-on-primary: #000000;
+  --md-sys-color-primary-container: #2A2A2E;
+  --md-sys-color-on-primary-container: #FFFFFF;
+
+  --md-sys-color-secondary: #CCCCCC;
+  --md-sys-color-on-secondary: #121212;
+  --md-sys-color-secondary-container: #222225;
+  --md-sys-color-on-secondary-container: #E0E0E0;
+
+  --md-sys-color-tertiary: #A0A0A0;
+  --md-sys-color-on-tertiary: #000000;
+  --md-sys-color-tertiary-container: #1C1C1F;
+  --md-sys-color-on-tertiary-container: #D0D0D0;
+
+  --md-sys-color-error: #E57373;
+  --md-sys-color-on-error: #000000;
+  --md-sys-color-error-container: #331515;
+  --md-sys-color-on-error-container: #FFCDD2;
+
+  /* --- M3 Text & Boundaries --- */
+  --md-sys-color-on-surface: #F2F2F2;
+  --md-sys-color-on-surface-variant: #A6A6AA;
+  --md-sys-color-outline: #424246;
+  --md-sys-color-outline-variant: #26262a;
+  --md-sys-color-inverse-surface: #E8E8EC;
+  --md-sys-color-inverse-on-surface: #121214;
+  --md-sys-color-inverse-primary: #000000;
+
+  /* --- M3 State Layers --- */
+  --md-sys-state-hover: rgba(255, 255, 255, 0.08);
+  --md-sys-state-focus: rgba(255, 255, 255, 0.12);
+  --md-sys-state-pressed: rgba(255, 255, 255, 0.16);
+
+  /* --- M3 Shape Scale (Corner Radii) --- */
+  --md-sys-shape-corner-none: 0px;
+  --md-sys-shape-corner-extra-small: 4px;
+  --md-sys-shape-corner-small: 8px;
+  --md-sys-shape-corner-medium: 12px;
+  --md-sys-shape-corner-large: 16px;
+  --md-sys-shape-corner-extra-large: 28px;
+  --md-sys-shape-corner-full: 9999px;
+
+  /* --- M3 Elevation Shadows --- */
+  --md-sys-elevation-0: none;
+  --md-sys-elevation-1: 0px 1px 2px rgba(0, 0, 0, 0.35), 0px 1px 3px 1px rgba(0, 0, 0, 0.18);
+  --md-sys-elevation-2: 0px 1px 2px rgba(0, 0, 0, 0.4), 0px 2px 6px 2px rgba(0, 0, 0, 0.2);
+  --md-sys-elevation-3: 0px 1px 3px rgba(0, 0, 0, 0.45), 0px 4px 8px 3px rgba(0, 0, 0, 0.25);
+  --md-sys-elevation-4: 0px 2px 3px rgba(0, 0, 0, 0.5), 0px 6px 10px 4px rgba(0, 0, 0, 0.3);
+  --md-sys-elevation-5: 0px 4px 4px rgba(0, 0, 0, 0.55), 0px 8px 12px 6px rgba(0, 0, 0, 0.35);
+
+  /* --- Backward Compatibility Mappings (Monochrome) --- */
+  --bg-deep-black: var(--md-sys-color-surface);
+  --bg-sidebar: var(--md-sys-color-surface-container-low);
+  --bg-card-dark: var(--md-sys-color-surface-container);
+  --bg-card-inner: var(--md-sys-color-surface-container-high);
+  --bg-hover: var(--md-sys-state-hover);
+
+  --border-subtle: var(--md-sys-color-outline-variant);
+  --border-focus: var(--md-sys-color-primary);
+
+  --apple-blue: #FFFFFF;
+  --apple-green: #E0E0E0;
+  --apple-purple: #D0D0D0;
+  --apple-red: #FFFFFF;
+  --apple-orange: #C0C0C0;
+  --apple-cyan: #EEEEEE;
+  --apple-gold: #F5F5F5;
+
+  --text-white: var(--md-sys-color-on-surface);
+  --text-gray: var(--md-sys-color-on-surface-variant);
+  --text-dim: #737378;
+
+  --tg-radius: 18px;
+  --tg-bubble-out-a: #FFFFFF;
+  --tg-bubble-out-b: #F5F5F5;
+  --tg-bubble-out-c: #EBEBEB;
 }
+
+/* ================== LIGHT THEME (M3 Monochrome) ================== */
+body.theme-light {
+  --md-sys-color-surface: #FFFFFF;
+  --md-sys-color-surface-dim: #DCDCDC;
+  --md-sys-color-surface-bright: #FFFFFF;
+  --md-sys-color-surface-container-lowest: #FFFFFF;
+  --md-sys-color-surface-container-low: #F6F6F8;
+  --md-sys-color-surface-container: #EEEEF1;
+  --md-sys-color-surface-container-high: #E5E5E9;
+  --md-sys-color-surface-container-highest: #DCDCE1;
+  --md-sys-color-surface-variant: #DFDFE3;
+
+  --md-sys-color-primary: #000000;
+  --md-sys-color-on-primary: #FFFFFF;
+  --md-sys-color-primary-container: #E2E2E6;
+  --md-sys-color-on-primary-container: #000000;
+
+  --md-sys-color-secondary: #424246;
+  --md-sys-color-on-secondary: #FFFFFF;
+  --md-sys-color-secondary-container: #EAEAEF;
+  --md-sys-color-on-secondary-container: #141417;
+
+  --md-sys-color-tertiary: #606065;
+  --md-sys-color-on-tertiary: #FFFFFF;
+  --md-sys-color-tertiary-container: #EDEDF2;
+  --md-sys-color-on-tertiary-container: #1A1A1E;
+
+  --md-sys-color-on-surface: #121214;
+  --md-sys-color-on-surface-variant: #56565C;
+  --md-sys-color-outline: #75757B;
+  --md-sys-color-outline-variant: #CBCBD1;
+  --md-sys-color-inverse-surface: #141416;
+  --md-sys-color-inverse-on-surface: #F0F0F3;
+  --md-sys-color-inverse-primary: #FFFFFF;
+
+  --md-sys-state-hover: rgba(0, 0, 0, 0.06);
+  --md-sys-state-focus: rgba(0, 0, 0, 0.10);
+  --md-sys-state-pressed: rgba(0, 0, 0, 0.14);
+
+  --bg-deep-black: var(--md-sys-color-surface);
+  --bg-sidebar: var(--md-sys-color-surface-container-low);
+  --bg-card-dark: var(--md-sys-color-surface-container);
+  --bg-card-inner: var(--md-sys-color-surface-container-high);
+  --bg-hover: var(--md-sys-state-hover);
+
+  --border-subtle: var(--md-sys-color-outline-variant);
+  --border-focus: var(--md-sys-color-primary);
+
+  --apple-blue: #000000;
+  --apple-green: #222225;
+  --apple-purple: #333338;
+  --apple-red: #111114;
+  --apple-orange: #444449;
+  --apple-cyan: #222225;
+  --apple-gold: #111114;
+
+  --text-white: var(--md-sys-color-on-surface);
+  --text-gray: var(--md-sys-color-on-surface-variant);
+  --text-dim: #8A8A92;
+
+  --tg-bubble-out-a: #000000;
+  --tg-bubble-out-b: #1A1A1E;
+  --tg-bubble-out-c: #222228;
+}
+
 
 * {
   box-sizing: border-box;
@@ -6642,3 +6783,577 @@ body.story-viewer-open { overflow: hidden; }
 }
 
   flex-wrap: wrap;
+
+
+
+/* ==========================================================================
+   MATERIAL DESIGN 3 (M3) — COMPONENT RULES & SPECIFICATIONS
+   ========================================================================== */
+
+/* ---------- Global Elements & Typography ---------- */
+* {
+  font-family: var(--font-family) !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--md-sys-color-outline);
+}
+
+::selection {
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+
+/* Hide macOS Skeuomorphic Elements */
+.traffic-lights,
+.apple-hero-logo {
+  display: none !important;
+}
+
+/* ---------- M3 Top App Bar ---------- */
+.app-topbar {
+  height: 60px !important;
+  background: var(--md-sys-color-surface) !important;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant) !important;
+  box-shadow: var(--md-sys-elevation-1) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 0 20px !important;
+}
+
+.user-chip {
+  border-radius: var(--md-sys-shape-corner-full) !important;
+  background: var(--md-sys-color-surface-container) !important;
+  border: 1px solid var(--md-sys-color-outline-variant) !important;
+  padding: 4px 14px 4px 6px !important;
+  gap: 10px !important;
+  transition: background 0.15s, border-color 0.15s !important;
+}
+.user-chip:hover {
+  background: var(--md-sys-color-surface-container-high) !important;
+  border-color: var(--md-sys-color-outline) !important;
+}
+
+/* M3 Icon Buttons (circular ripple) */
+.menu-burger-btn,
+.logout-icon-btn,
+.chat-top-action,
+.chat-back-btn,
+.drawer-close-btn,
+.modal-close-btn,
+.filter-icon,
+.auth-eye {
+  border-radius: var(--md-sys-shape-corner-full) !important;
+  width: 40px !important;
+  height: 40px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: transparent !important;
+  color: var(--md-sys-color-on-surface) !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: background 0.15s, color 0.15s, transform 0.1s !important;
+}
+.menu-burger-btn:hover,
+.logout-icon-btn:hover,
+.chat-top-action:hover,
+.drawer-close-btn:hover,
+.modal-close-btn:hover,
+.filter-icon:hover {
+  background: var(--md-sys-state-hover) !important;
+  color: var(--md-sys-color-primary) !important;
+}
+.menu-burger-btn:active,
+.logout-icon-btn:active,
+.chat-top-action:active {
+  transform: scale(0.94) !important;
+}
+
+/* M3 Tonal Action Pill */
+.top-action-pill {
+  border-radius: var(--md-sys-shape-corner-full) !important;
+  background: var(--md-sys-color-surface-container-high) !important;
+  border: 1px solid var(--md-sys-color-outline-variant) !important;
+  color: var(--md-sys-color-on-surface) !important;
+  padding: 8px 16px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  transition: background 0.15s, border-color 0.15s !important;
+}
+.top-action-pill:hover {
+  background: var(--md-sys-color-surface-container-highest) !important;
+  border-color: var(--md-sys-color-outline) !important;
+}
+
+/* ---------- M3 Sidebar & Search Bar ---------- */
+.chats-sidebar {
+  background: var(--md-sys-color-surface-container-low) !important;
+  border-right: 1px solid var(--md-sys-color-outline-variant) !important;
+}
+
+.search-container input,
+#chats-search-input,
+.modal-search-input {
+  border-radius: var(--md-sys-shape-corner-full) !important;
+  background: var(--md-sys-color-surface-container-high) !important;
+  border: 1px solid var(--md-sys-color-outline-variant) !important;
+  color: var(--md-sys-color-on-surface) !important;
+  padding: 12px 20px !important;
+  font-size: 14px !important;
+  letter-spacing: 0.1px !important;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s !important;
+}
+.search-container input:focus,
+#chats-search-input:focus,
+.modal-search-input:focus {
+  border-color: var(--md-sys-color-primary) !important;
+  background: var(--md-sys-color-surface-container-highest) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.14) !important;
+}
+
+/* M3 Filter Chips Bar */
+.chats-filter-icons {
+  border-radius: var(--md-sys-shape-corner-full) !important;
+  background: var(--md-sys-color-surface-container) !important;
+  border: 1px solid var(--md-sys-color-outline-variant) !important;
+  padding: 4px !important;
+  gap: 4px !important;
+}
+.chats-filter-icons .filter-icon {
+  border-radius: var(--md-sys-shape-corner-full) !important;
+  width: 34px !important;
+  height: 34px !important;
+}
+.chats-filter-icons .filter-icon.active {
+  background: var(--md-sys-color-primary) !important;
+  color: var(--md-sys-color-on-primary) !important;
+  box-shadow: var(--md-sys-elevation-1) !important;
+}
+
+/* Chat List Rows */
+.chat-row-item {
+  border-radius: var(--md-sys-shape-corner-large) !important;
+  margin: 3px 0 !important;
+  padding: 12px 14px !important;
+  border: 1px solid transparent !important;
+  transition: background 0.15s, border-color 0.15s !important;
+}
+.chat-row-item:hover {
+  background: var(--md-sys-color-surface-container) !important;
+}
+.chat-row-item.active {
+  background: var(--md-sys-color-surface-container-highest) !important;
+  border-color: var(--md-sys-color-outline) !important;
+}
+.chat-row-item.active .chat-row-title {
+  color: var(--md-sys-color-primary) !important;
+  font-weight: 600 !important;
+}
+
+/* ---------- M3 Chat Canvas & Message Bubbles ---------- */
+.chat-main-view {
+  background-color: var(--md-sys-color-surface) !important;
+}
+
+.chat-top-header {
+  background: var(--md-sys-color-surface-container-low) !important;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 12px 20px !important;
+}
+
+.empty-pattern-slate {
+  background: var(--md-sys-color-surface) !important;
+}
+.empty-slate-text {
+  color: var(--md-sys-color-on-surface-variant) !important;
+  font-size: 15px !important;
+  background: var(--md-sys-color-surface-container) !important;
+  padding: 10px 22px !important;
+  border-radius: var(--md-sys-shape-corner-full) !important;
+  border: 1px solid var(--md-sys-color-outline-variant) !important;
+}
+
+/* Outgoing Messages (M3 Primary / High-Contrast Monochrome) */
+.bubble.out {
+  background: var(--md-sys-color-primary) !important;
+  color: var(--md-sys-color-on-primary) !important;
+  border-radius: 20px 20px 4px 20px !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: var(--md-sys-elevation-1) !important;
+}
+.bubble.out .msg-author,
+.bubble.out .msg-text,
+.bubble.out p {
+  color: var(--md-sys-color-on-primary) !important;
+}
+.bubble.out .msg-meta,
+.bubble.out .msg-time {
+  color: rgba(0, 0, 0, 0.6) !important;
+}
+.bubble.out .msg-ticks {
+  color: #000000 !important;
+}
+.bubble.out .msg-reply-quote {
+  background: rgba(0, 0, 0, 0.08) !important;
+  border-left: 3px solid #000000 !important;
+  color: #000000 !important;
+  border-radius: 6px !important;
+}
+
+/* Incoming Messages (M3 Surface Container Highest) */
+.bubble.in {
+  background: var(--md-sys-color-surface-container-highest) !important;
+  color: var(--md-sys-color-on-surface) !important;
+  border-radius: 20px 20px 20px 4px !important;
+  border: 1px solid var(--md-sys-color-outline-variant) !important;
+  box-shadow: var(--md-sys-elevation-1) !important;
+}
+.bubble.in .msg-author {
+  color: var(--md-sys-color-primary) !important;
+  font-weight: 600 !important;
+}
+.bubble.in .msg-meta,
+.bubble.in .msg-time {
+  color: var(--md-sys-color-on-surface-variant) !important;
+}
+.bubble.in .msg-reply-quote {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-left: 3px solid var(--md-sys-color-primary) !important;
+  border-radius: 6px !important;
+}
+
+/* Chat Input Bar */
+.chat-input-bar {
+  background: var(--md-sys-color-surface-container-low) !important;
+  border-top: 1px solid var(--md-sys-color-outline-variant) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 10px 16px !important;
+  gap: 10px !important;
+}
+.chat-input-bar textarea {
+  border-radius: 24px !important;
+  background: var(--md-sys-color-surface-container-high) !important;
+  border: 1px solid var(--md-sys-color-outline-variant) !important;
+  color: var(--md-sys-color-on-surface) !important;
+  padding: 11px 18px !important;
+  font-size: 14.5px !important;
+  line-height: 1.4 !important;
+  transition: border-color 0.2s, background 0.2s !important;
+}
+.chat-input-bar textarea:focus {
+  border-color: var(--md-sys-color-primary) !important;
+  background: var(--md-sys-color-surface-container-highest) !important;
+  outline: none !important;
+}
+
+.send-message-btn {
+  border-radius: var(--md-sys-shape-corner-full) !important;
+  background: var(--md-sys-color-primary) !important;
+  color: var(--md-sys-color-on-primary) !important;
+  width: 44px !important;
+  height: 44px !important;
+  border: none !important;
+  box-shadow: var(--md-sys-elevation-2) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: transform 0.15s, box-shadow 0.15s, filter 0.15s !important;
+}
+.send-message-btn:hover {
+  filter: brightness(0.92) !important;
+  box-shadow: var(--md-sys-elevation-3) !important;
+  transform: scale(1.05) !important;
+}
+.send-message-btn:active {
+  transform: scale(0.95) !important;
+}
+
+/* Light Theme Overrides for Chat */
+body.theme-light .bubble.out {
+  background: #000000 !important;
+  color: #FFFFFF !important;
+  border-color: #222222 !important;
+}
+body.theme-light .bubble.out .msg-author,
+body.theme-light .bubble.out .msg-text,
+body.theme-light .bubble.out p {
+  color: #FFFFFF !important;
+}
+body.theme-light .bubble.out .msg-meta,
+body.theme-light .bubble.out .msg-time,
+body.theme-light .bubble.out .msg-ticks {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+body.theme-light .bubble.out .msg-reply-quote {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-left-color: #FFFFFF !important;
+  color: #FFFFFF !important;
+}
+body.theme-light .bubble.in {
+  background: #E8E8ED !important;
+  color: #121214 !important;
+  border-color: #D3D3D8 !important;
+}
+body.theme-light .send-message-btn {
+  background: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+/* ---------- M3 Navigation Drawer ---------- */
+.runa-drawer {
+  border-radius: 0 var(--md-sys-shape-corner-extra-large) var(--md-sys-shape-corner-extra-large) 0 !important;
+  background: var(--md-sys-color-surface-container-low) !important;
+  border-right: 1px solid var(--md-sys-color-outline-variant) !important;
+  box-shadow: var(--md-sys-elevation-4) !important;
+  padding: 24px 16px !important;
+}
+.drawer-nav-item {
+  border-radius: var(--md-sys-shape-corner-full) !important;
+  margin: 4px 8px !important;
+  padding: 12px 20px !important;
+  color: var(--md-sys-color-on-surface) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  transition: background 0.15s, color 0.15s !important;
+}
+.drawer-nav-item:hover {
+  background: var(--md-sys-color-surface-container-high) !important;
+  color: var(--md-sys-color-primary) !important;
+}
+.drawer-nav-item.active {
+  background: var(--md-sys-color-primary) !important;
+  color: var(--md-sys-color-on-primary) !important;
+  font-weight: 600 !important;
+}
+
+/* ---------- M3 Buttons Specification ---------- */
+.act-btn.primary,
+.btn-primary,
+.act-btn.primary.auth-submit,
+.mac-btn.primary,
+.mac-btn.primary-purple,
+.story-publish-btn,
+.gw-submit-btn,
+.btn-wallet-action.primary,
+.clan-create-btn {
+  border-radius: var(--md-sys-shape-corner-full) !important;
+  background: var(--md-sys-color-primary) !important;
+  color: var(--md-sys-color-on-primary) !important;
+  border: none !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.15px !important;
+  box-shadow: var(--md-sys-elevation-1) !important;
+  cursor: pointer !important;
+  transition: filter 0.15s, transform 0.12s, box-shadow 0.15s !important;
+}
+.act-btn.primary:hover,
+.btn-primary:hover,
+.act-btn.primary.auth-submit:hover,
+.mac-btn.primary-purple:hover {
+  filter: brightness(0.92) !important;
+  box-shadow: var(--md-sys-elevation-2) !important;
+  transform: translateY(-1px) !important;
+}
+.act-btn.primary:active,
+.btn-primary:active {
+  transform: scale(0.98) !important;
+}
+
+.act-btn.secondary,
+.btn-secondary,
+.act-btn.secondary.auth-switch,
+.mac-btn.secondary,
+.btn-wallet-action.secondary {
+  border-radius: var(--md-sys-shape-corner-full) !important;
+  background: transparent !important;
+  color: var(--md-sys-color-on-surface) !important;
+  border: 1px solid var(--md-sys-color-outline) !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: background 0.15s, border-color 0.15s, color 0.15s !important;
+}
+.act-btn.secondary:hover,
+.btn-secondary:hover,
+.act-btn.secondary.auth-switch:hover,
+.mac-btn.secondary:hover {
+  background: var(--md-sys-state-hover) !important;
+  border-color: var(--md-sys-color-primary) !important;
+  color: var(--md-sys-color-primary) !important;
+}
+
+/* ---------- M3 Authentic Switch (Replacing Apple Switch) ---------- */
+.mac-switch {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  width: 52px !important;
+  height: 32px !important;
+  border-radius: 16px !important;
+  background: var(--md-sys-color-surface-container-highest) !important;
+  border: 2px solid var(--md-sys-color-outline) !important;
+  position: relative !important;
+  cursor: pointer !important;
+  outline: none !important;
+  transition: background 0.2s cubic-bezier(0.2, 0, 0, 1), border-color 0.2s cubic-bezier(0.2, 0, 0, 1) !important;
+}
+.mac-switch:checked {
+  background: var(--md-sys-color-primary) !important;
+  border-color: var(--md-sys-color-primary) !important;
+}
+.mac-switch::after {
+  content: '' !important;
+  position: absolute !important;
+  top: 6px !important;
+  left: 6px !important;
+  width: 16px !important;
+  height: 16px !important;
+  background: var(--md-sys-color-outline) !important;
+  border-radius: 50% !important;
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1), width 0.2s cubic-bezier(0.2, 0, 0, 1), height 0.2s cubic-bezier(0.2, 0, 0, 1), top 0.2s cubic-bezier(0.2, 0, 0, 1), left 0.2s cubic-bezier(0.2, 0, 0, 1), background 0.2s cubic-bezier(0.2, 0, 0, 1) !important;
+}
+.mac-switch:checked::after {
+  transform: translateX(20px) !important;
+  width: 24px !important;
+  height: 24px !important;
+  top: 2px !important;
+  left: 2px !important;
+  background: var(--md-sys-color-on-primary) !important;
+}
+
+/* ---------- M3 Modals, Dialogs & Sheets ---------- */
+.modal-card,
+.modal-profile-card,
+.chat-info-sheet,
+.settings-mac-window,
+.wallet-card-modal,
+.modal-content,
+.modal-dialog,
+.giveaway-card-preview,
+.create-chat-window,
+.cs-card,
+.modal-box {
+  border-radius: var(--md-sys-shape-corner-extra-large) !important;
+  background: var(--md-sys-color-surface-container) !important;
+  border: 1px solid var(--md-sys-color-outline-variant) !important;
+  box-shadow: var(--md-sys-elevation-4) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.mac-titlebar {
+  border-bottom: 1px solid var(--md-sys-color-outline-variant) !important;
+}
+
+/* ---------- M3 Auth / Activation Screen ---------- */
+#mac-activation-screen {
+  background: var(--md-sys-color-surface) !important;
+}
+.auth-shell {
+  border-radius: var(--md-sys-shape-corner-extra-large) !important;
+  background: var(--md-sys-color-surface-container) !important;
+  border: 1px solid var(--md-sys-color-outline-variant) !important;
+  box-shadow: var(--md-sys-elevation-3) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.auth-brand {
+  background: var(--md-sys-color-surface-container-low) !important;
+  border-right: 1px solid var(--md-sys-color-outline-variant) !important;
+}
+.auth-brand-orb {
+  display: none !important;
+}
+.auth-logo {
+  background: var(--md-sys-color-primary) !important;
+  color: var(--md-sys-color-on-primary) !important;
+  border-radius: var(--md-sys-shape-corner-medium) !important;
+  box-shadow: var(--md-sys-elevation-2) !important;
+  font-weight: 800 !important;
+}
+.auth-brand-copy h2 {
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  color: var(--md-sys-color-on-surface) !important;
+  font-weight: 700 !important;
+}
+.auth-feature-icon {
+  border-radius: var(--md-sys-shape-corner-medium) !important;
+  background: var(--md-sys-color-surface-container-high) !important;
+  border: 1px solid var(--md-sys-color-outline-variant) !important;
+  color: var(--md-sys-color-primary) !important;
+}
+.auth-feature-icon.blue,
+.auth-feature-icon.purple,
+.auth-feature-icon.green {
+  background: var(--md-sys-color-surface-container-high) !important;
+}
+.auth-foot-dot {
+  background: var(--md-sys-color-primary) !important;
+  box-shadow: none !important;
+}
+.auth-panel {
+  background: var(--md-sys-color-surface-container) !important;
+}
+.auth-mode-tabs {
+  border-radius: var(--md-sys-shape-corner-full) !important;
+  background: var(--md-sys-color-surface-container-high) !important;
+  border: 1px solid var(--md-sys-color-outline-variant) !important;
+  padding: 4px !important;
+  gap: 4px !important;
+}
+.auth-tab {
+  border-radius: var(--md-sys-shape-corner-full) !important;
+  font-weight: 500 !important;
+  color: var(--md-sys-color-on-surface-variant) !important;
+  transition: background 0.18s, color 0.18s !important;
+}
+.auth-tab.active {
+  background: var(--md-sys-color-primary) !important;
+  color: var(--md-sys-color-on-primary) !important;
+  font-weight: 600 !important;
+  box-shadow: var(--md-sys-elevation-1) !important;
+}
+.auth-input-wrap {
+  border-radius: var(--md-sys-shape-corner-medium) !important;
+  background: var(--md-sys-color-surface-container-low) !important;
+  border: 1px solid var(--md-sys-color-outline) !important;
+  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s !important;
+}
+.auth-input-wrap:focus-within {
+  border-color: var(--md-sys-color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.16) !important;
+  background: var(--md-sys-color-surface-container-high) !important;
+}
+
+/* Badges & Chips */
+.unread-badge,
+.badge-counter,
+.chat-pin {
+  border-radius: var(--md-sys-shape-corner-full) !important;
+  background: var(--md-sys-color-primary) !important;
+  color: var(--md-sys-color-on-primary) !important;
+  font-weight: 700 !important;
+}
