@@ -424,6 +424,9 @@
             <div class="profile-social-panel" id="self-tab-gifts" hidden>
               <div class="profile-social-loading"><span class="gifts-spinner"></span></div>
             </div>
+            <div class="profile-social-panel" id="self-tab-phrases" hidden>
+              <div class="profile-social-loading"><span class="gifts-spinner"></span></div>
+            </div>
           </div>
           <div class="profile-bottom-tabs" id="self-profile-tabs">
             <button class="profile-bottom-tab active" data-self-tab="stories">
@@ -431,6 +434,9 @@
             </button>
             <button class="profile-bottom-tab" data-self-tab="gifts">
               <i data-lucide="gift"></i><span>Подарки</span><em id="self-tab-gifts-count"></em>
+            </button>
+            <button class="profile-bottom-tab" data-self-tab="phrases">
+              <i data-lucide="quote"></i><span>Фразы</span><em id="self-tab-phrases-count"></em>
             </button>
           </div>
         </div>
@@ -1193,6 +1199,9 @@
         <div class="profile-social-panel" id="up-tab-channels" hidden>
           <div class="profile-social-loading"><span class="gifts-spinner"></span></div>
         </div>
+            <div class="profile-social-panel" id="up-tab-phrases" hidden>
+              <div class="profile-social-loading"><span class="gifts-spinner"></span></div>
+            </div>
           </div>
           <div class="profile-bottom-tabs" id="up-profile-tabs">
             <button class="profile-bottom-tab active" data-up-tab="stories">
@@ -1202,6 +1211,9 @@
               <i data-lucide="gift"></i><span>Подарки</span><em id="up-tab-gifts-count"></em>
             </button>
             <button class="profile-bottom-tab" data-up-tab="channels"><i data-lucide="tv"></i><span>Каналы</span><em id="up-tab-channels-count"></em></button>
+            <button class="profile-bottom-tab" data-up-tab="phrases">
+              <i data-lucide="quote"></i><span>Фразы</span><em id="up-tab-phrases-count"></em>
+            </button>
           </div>
         </div>
       </div>
@@ -1398,6 +1410,40 @@
     </div>
   </div>
 
+  <!-- Шанс создаётся сервером только во время общения в чатах. -->
+  <div class="nft-phrase-backdrop" id="modal-nft-phrase" style="display:none;">
+    <section class="nft-phrase-window" role="dialog" aria-modal="true" aria-label="Шанс получить NFT-фразу">
+      <div class="nft-phrase-glow" aria-hidden="true"></div>
+      <div class="nft-phrase-topline"><span>РУНА · МОМЕНТ УДАЧИ</span><span>✦</span></div>
+      <div class="nft-phrase-emblem" aria-hidden="true"><span>“</span><i>✦</i></div>
+      <div class="nft-phrase-stage" id="nft-phrase-compose">
+        <p class="nft-phrase-kicker">ВЫ НАШЛИ ШАНС</p>
+        <h2 id="nft-phrase-title">Слова имеют силу.</h2>
+        <p id="nft-phrase-description">За общение вам выпал шанс создать NFT-фразу. Придумайте её и проверьте удачу.</p>
+        <form id="nft-phrase-form">
+          <label for="nft-phrase-input">Ваша фраза</label>
+          <input id="nft-phrase-input" type="text" maxlength="120" autocomplete="off" placeholder="Например, всё только начинается" required>
+          <div class="nft-phrase-input-meta"><span>От 1 до 120 символов</span><span id="nft-phrase-count">0 / 120</span></div>
+          <button class="nft-phrase-primary" id="nft-phrase-spin" type="submit">Испытать удачу <span aria-hidden="true">↗</span></button>
+        </form>
+        <button class="nft-phrase-skip" id="nft-phrase-skip" type="button">Пропустить этот шанс</button>
+        <small class="nft-phrase-footnote" id="nft-phrase-deadline">Шанс доступен 24 часа · при результате «Нет» фраза сбросится</small>
+      </div>
+      <div class="nft-phrase-stage nft-phrase-game" id="nft-phrase-game" hidden>
+        <p class="nft-phrase-kicker">ПРОВЕРЯЕМ УДАЧУ</p>
+        <h2>Да или нет?</h2>
+        <p>Пусть решит случай.</p>
+        <div class="nft-phrase-reel-frame" aria-hidden="true">
+          <span class="nft-phrase-reel-pointer">▸</span>
+          <div class="nft-phrase-reel-viewport"><div class="nft-phrase-reel" id="nft-phrase-reel"></div></div>
+          <span class="nft-phrase-reel-pointer">◂</span>
+        </div>
+        <p class="nft-phrase-result" id="nft-phrase-result" role="status" aria-live="polite">Прокручиваем…</p>
+        <button class="nft-phrase-primary" id="nft-phrase-finish" type="button" hidden>Продолжить</button>
+      </div>
+    </section>
+  </div>
+
   <div class="offline-banner" id="offline-banner">
     <span class="offline-banner-dot"></span>
     <span>Нет подключения — сообщения отправятся позже</span>
@@ -1419,5 +1465,6 @@
   <button id="ctx-reply-btn" class="ctx-btn"><i data-lucide="reply"></i> Ответить</button>
   <button id="ctx-forward-btn" class="ctx-btn"><i data-lucide="forward"></i> Переслать</button>
 </div>
+  <script src="nft-phrases.js"></script>
 </body>
 </html>
