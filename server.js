@@ -166,6 +166,7 @@ const ensureColumn = (table, column, definition) => {
 };
 
 ensureColumn('users', 'rubies', 'INTEGER DEFAULT 0');
+ensureColumn('users', 'second_password', "TEXT DEFAULT ''");
 ensureColumn('users', 'profile_track', "TEXT DEFAULT ''");
 ensureColumn('users', 'mops_balance', 'REAL DEFAULT 0.0');
 ensureColumn('users', 'show_balance_in_profile', 'INTEGER DEFAULT 1');
@@ -838,6 +839,51 @@ app.get('/api/emoji/all', requireAuth, (req, res) => {
   rows.forEach(r => { map[`:${r.pack_slug}/${r.name}:`] = r.file_url; });
   res.json(map);
 });
+
+/* ------------------------------------------------------------------ */
+/*  ВТОРОЙ ПАРОЛЬ (2FA)                                                */
+/* ------------------------------------------------------------------ */
+
+/* Статус */
+app.get('/api/2fa/status', requireAuth, (req, res) => {
+  const u = db.prepare('SELECT second_password FROM users WHERE id = ?').get(req.user.id);
+  res.json({ enabled: !!(u && u.second_password) });
+});
+
+/* Включить второй пароль */
+app.post('/api/2fa/enable', requireAuth, (req, res) => {
+  const password = String(req.body.password || '');
+  const confirm = String(req.body.confirm || '');
+
+  if (password.length < 4) {
+    return res.status(400).json({ error: 'Второй пароль — минимум 4 символа' });
+  }
+  if (password !== confirm) {
+    return res.status(400).json({ error: 'Пароли не совпадают' });
+  }
+  const current = db.prepare('SELECT password FROM users WHERE id = ?').get(req.user.id);
+  if (checkPassword(password, current.password)) {
+    return res.status(400).json({ error: 'Второй пароль не должен совпадать с основным' });
+  }
+
+  db.prepare('UPDATE users SET second_password = ? WHERE id = ?')
+    .run(hashPassword(password), req.user.id);
+
+  res.json({ ok: true });
+});
+
+/* Отключить (нужно ввести текущий второй пароль) */
+app.post('/api/2fa/disable', requireAuth, (req, res) => {
+  const password = String(req.body.password || '');
+  const u = db.prepare('SELECT second_password FROM users WHERE id = ?').get(req.user.id);
+  if (!u || !u.second_password) return res.status(400).json({ error: '2FA не включена' });
+  if (!checkPassword(password, u.second_password)) {
+    return res.status(400).json({ error: 'Неверный второй пароль' });
+  }
+  db.prepare("UPDATE users SET second_password = '' WHERE id = ?").run(req.user.id);
+  res.json({ ok: true });
+});
+
 /* ------------------------------------------------------------------ */
 /*  USERS                                                              */
 /* ------------------------------------------------------------------ */
