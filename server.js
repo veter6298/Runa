@@ -774,6 +774,19 @@ app.get('/api/emoji/all', requireAuth, (req, res) => {
   rows.forEach(r => { map[`:${r.pack_slug}/${r.name}:`] = r.file_url; });
   res.json(map);
 });
+app.get('/api/emoji/all', requireAuth, (req, res) => {
+  const rows = db.prepare(`
+    SELECT p.slug AS pack_slug, e.name, e.file_url
+    FROM emojis e JOIN emoji_packs p ON p.id = e.pack_id
+    WHERE p.official = 1
+       OR p.owner_id = ?
+       OR (p.is_public = 1 AND ? = 1)
+  `).all(req.user.id, req.user.is_premium ? 1 : 0);
+
+  const map = {};
+  rows.forEach(r => { map[`:${r.pack_slug}/${r.name}:`] = r.file_url; });
+  res.json(map);
+});
 /* ------------------------------------------------------------------ */
 /*  USERS                                                              */
 /* ------------------------------------------------------------------ */
