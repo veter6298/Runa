@@ -5149,3 +5149,87 @@ document.getElementById('emoji-panel-close')?.addEventListener('click', () => {
 if (typeof token !== 'undefined' && token) {
   loadEmojiCache();
   }
+// ======================= ВТОРОЙ ПАРОЛЬ (2FA) =======================
+let pending2faUserId = null;
+
+async function render2faPanel() {
+  const body = document.getElementById('2fa-body');
+  if (!body) return;
+  body.innerHTML = '<p style="opacity:.7;font-size:13px;">Загрузка…</p>';
+
+  const status = await fetch('/api/2fa/status', {
+    headers: { Authorization: `Bearer ${token}` }
+  }).then(r => r.json());
+
+  if (status.enabled) {
+    body.innerHTML = `
+      <p style="font-size:13px;color:#30d158;margin-bottom:12px;">✅ Второй пароль включён</p>
+      <p style="opacity:.7;font-size:12px;margin-bottom:12px;">
+        При входе после обычного пароля потребуется ввести второй.
+      </p>
+      <p style="font-size:13px;margin-bottom:6px;"><b>Отключить</b></p>
+      <input type="password" id="2fa-disable-pwd" placeholder="Текущий второй пароль"
+             style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,.06);border:0;color:#fff;margin-bottom:8px;">
+      <button class="mac-btn secondary" id="btn-2fa-disable" style="width:100%;">
+        <i data-lucide="shield-off"></i> Отключить
+      </button>
+    `;
+    document.getElementById('btn-2fa-disable').addEventListener('click', async () => {
+      const pwd = document.getElementById('2fa-disable-pwd').value;
+      const r = await fetch('/api/2fa/disable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ password: pwd })
+      }).then(r => r.json());
+      if (r.ok) { toast('Второй пароль отключён'); render2faPanel(); }
+      else alert(r.error || 'Ошибка');
+    });
+  } else {
+    body.innerHTML = `
+      <p style="opacity:.7;font-size:12px;margin-bottom:12px;">
+        Второй пароль защищает вход: даже если кто-то узнает основной пароль, без второго он не войдёт.
+      </p>
+      <input type="password" id="2fa-new-pwd" placeholder="Второй пароль (мин. 4 символа)"
+             style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,.06);border:0;color:#fff;margin-bottom:8px;">
+      <input type="password" id="2fa-new-pwd2" placeholder="Повторите пароль"
+             style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,.06);border:0;color:#fff;margin-bottom:8px;">
+      <button class="mac-btn primary-purple" id="btn-2fa-enable" style="width:100%;">
+        <i data-lucide="shield-plus"></i> Включить
+      </button>
+    `;
+    document.getElementById('btn-2fa-enable').addEventListener('click', async () => {
+      const pwd = document.getElementById('2fa-new-pwd').value;
+      const pwd2 = document.getElementById('2fa-new-pwd2').value;
+      const r = await fetch('/api/2fa/enable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ password: pwd, confirm: pwd2 })
+      }).then(r => r.json());
+      if (r.ok) { toast('Второй пароль включён'); render2faPanel(); }
+      else alert(r.error || 'Ошибка');
+    });
+  }
+}
+
+document.querySelector('[data-setting="2fa"]')?.addEventListener('click', () => {
+  document.getElementById('modal-2fa').style.display = 'block';
+  render2faPanel();
+});
+
+document.getElementById('btn-2fa-login-submit')?.addEventListener('click', async () => {
+  const pwd = document.getElementById('2fa-login-input').value;
+  const err = document.getElementById('2fa-login-error');
+  err.style.display = 'none';
+  const r = await fetch('/api/auth/login/2fa', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId: pending2faUserId, password: pwd })
+  }).then(r => r.json());
+  if (r.token) {
+    localStorage.setItem('token', r.token);
+    location.reload();
+  } else {
+    err.textContent = r.error || 'Ошибка';
+    err.style.display = 'block';
+  }
+});
