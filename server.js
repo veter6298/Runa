@@ -761,6 +761,32 @@ app.get('/api/emoji/packs', requireAuth, (req, res) => {
   });
   res.json(packs);
 });
+app.post('/api/emoji/packs/:id/upload', requireAuth, emojiUpload.single('file'), (req, res) => {
+  const pack = db.prepare('SELECT * FROM emoji_packs WHERE id = ?').get(req.params.id);
+  if (!pack) return res.status(404).json({ error: 'Пак не найден' });
+  if (pack.owner_id !== req.user.id && !req.user.is_admin) {
+    return res.status(403).json({ error: 'Это не ваш пак' });
+  }
+  if (!req.file) return res.status(400).json({ error: 'Выберите картинку (png/webp/gif)' });
+
+  const name = String(req.body.name || '').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, EMOJI_LIMITS.maxEmojiName);
+  if (!name) return res.status(400).json({ error: 'Имя эмодзи обязательно (латиница/цифры/_)' });
+
+  const count = db.prepare('SELECT COUNT(*) c FROM emojis WHERE pack_id = ?').get(pack.id).c;
+  if (count >= EMOJI_LIMITS.maxEmojisPerPack) {
+    return res.status(400).json({ error: `Максимум ${EMOJI_LIMITS.maxEmojisPerPack} эмодзи в паке` });
+  }
+  if (db.prepare('SELECT id FROM emojis WHERE pack_id = ? AND name = ?').get(pack.id, name)) {
+    return res.status(400).json({ error: 'Такое имя уже есть' });
+  }
+
+  const id = uuidv4();
+  const url = `/uploads/${req.file.filename}`;
+  db.prepare('INSERT INTO emojis (id, pack_id, name, file_url) VALUES (?, ?, ?, ?)')
+    .run(id, pack.id, name, url);
+
+  res.json({ ok: true, id, name, url });
+});
 app.delete('/api/emoji/packs/:id', requireAuth, (req, res) => {
   const pack = db.prepare('SELECT * FROM emoji_packs WHERE id = ?').get(req.params.id);
   if (!pack) return res.status(404).json({ error: 'Пак не найден' });
