@@ -519,6 +519,8 @@ function applyProfileTab(container, tab, context) {
   if (!storiesPanel || !giftsPanel || !phrasesPanel) return;
   storiesPanel.hidden = tab !== 'stories';
   giftsPanel.hidden = tab !== 'gifts';
+  const channelsPanel = $('up-tab-channels');
+  if (channelsPanel) channelsPanel.hidden = tab !== 'channels';
   phrasesPanel.hidden = tab !== 'phrases';
   const tabs = $(`${prefix}-profile-tabs`);
   if (tabs) tabs.querySelectorAll('.profile-bottom-tab').forEach(btn => {
@@ -547,6 +549,8 @@ function renderSelfSocial() {
 
 function renderUpSocial() {
   const storiesPanel = $('up-tab-stories');
+  const channelsPanel = $('up-tab-channels');
+  if (channelsPanel) channelsPanel.innerHTML = '<div style="padding: 20px; text-align: center; opacity: 0.5;">Каналы пока не добавлены</div>';
   const giftsPanel = $('up-tab-gifts');
   const phrasesPanel = $('up-tab-phrases');
   if (!storiesPanel || !giftsPanel || !phrasesPanel) return;
