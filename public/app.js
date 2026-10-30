@@ -285,7 +285,11 @@ async function api(path, options = {}) {
     clearSession();
     throw new Error('Сессия истекла');
   }
-  if (!res.ok) throw new Error((data && data.error) || `Ошибка ${res.status}`);
+  if (!res.ok) {
+    const error = new Error((data && data.error) || `Ошибка ${res.status}`);
+    error.status = res.status;
+    throw error;
+  }
   return data;
 }
 
@@ -941,12 +945,13 @@ function connectSocket() {
   socket.on('nft_market_updated', () => {
     const list = $('modal-list');
     const title = $('list-modal-title');
-    if (list && list.style.display !== 'none' && title && title.textContent === 'Маркет юзернеймов') {
-      openNftMarket();
+    if (list && list.style.display !== 'none' && title && title.textContent === 'Маркет юзернеймов' && nftMarketTab === 'usernames') {
+      openNftMarket('usernames', true);
     }
   });
 
   if (window.onRunaSocketReady) window.onRunaSocketReady(socket);
+  if (window.onNftPhraseSocketReady) window.onNftPhraseSocketReady(socket);
 
   socket.on('user_updated', (profile) => {
     if (profile && profile.id === currentUser.id) {
@@ -3062,6 +3067,40 @@ async function handleListAction(e) {
     if (action === 'nft-request') {
       toast('Запрос отправлен администрации');
     }
+    if (action === 'market-tab') {
+      await openNftMarket(btn.dataset.tab);
+    }
+    if (action === 'market-phrases') {
+      closeAnimated($('modal-profile-card'));
+      closeAnimated($('modal-user-profile'));
+      await openNftMarket('phrases');
+    }
+    if (action === 'phrase-sell') {
+      const text = btn.dataset.text || '';
+      const raw = prompt(`Цена NFT-фразы «${text}» в рубинах:`, '1000');
+      if (raw === null) return;
+      const price = Number(raw);
+      if (!Number.isSafeInteger(price) || price < 1 || price > 10000000) {
+        return toast('Введите целую цену от 1 до 10 000 000 рубинов', 'error');
+      }
+      await api(`/api/nft-phrases/${encodeURIComponent(id)}/sell`, { method: 'POST', body: { price } });
+      toast(`Фраза выставлена на продажу за ${price.toLocaleString('ru-RU')} 💎`, 'message');
+      refreshPhraseViews();
+    }
+    if (action === 'phrase-unlist') {
+      await api(`/api/nft-phrases/${encodeURIComponent(id)}/unlist`, { method: 'POST' });
+      toast('Фраза снята с продажи');
+      refreshPhraseViews();
+    }
+    if (action === 'phrase-buy') {
+      const price = Number(btn.dataset.price) || 0;
+      const text = btn.dataset.text || '';
+      if (!confirm(`Купить NFT-фразу «${text}» за ${price.toLocaleString('ru-RU')} рубинов?`)) return;
+      const data = await api(`/api/nft-phrases/${encodeURIComponent(id)}/buy`, { method: 'POST', body: { expectedPrice: price } });
+      if (data.user) { currentUser = data.user; updateUserUI(); }
+      toast('NFT-фраза теперь в вашем профиле', 'message');
+      refreshPhraseViews();
+    }
     if (action === 'nft-buy') {
       const price = Number(btn.dataset.price) || 0;
       const handle = btn.dataset.username || '';
@@ -3094,7 +3133,10 @@ async function handleListAction(e) {
     if (action === 'copy-text') {
       navigator.clipboard.writeText(btn.dataset.text || '').then(() => toast('Скопировано'));
     }
-  } catch (err) { toast(err.message, 'error'); }
+  } catch (err) {
+    toast(err.message, 'error');
+    if (action === 'phrase-buy' && err.status === 409) refreshPhraseViews();
+  }
 }
 
 function renderUserProfile(user) {
@@ -3205,12 +3247,76 @@ function openStore() {
     </div>`);
 }
 
-async function openNftMarket() {
+let nftMarketTab = 'usernames';
+let nftMarketRequest = 0;
+
+function refreshPhraseViews(ownerIds) {
+  if (window.refreshPhraseProfiles) window.refreshPhraseProfiles(ownerIds);
+  const list = $('modal-list');
+  const title = $('list-modal-title');
+  if (list && list.style.display !== 'none' && title && title.textContent === 'Маркет NFT-фраз' && nftMarketTab === 'phrases') {
+    openNftMarket('phrases', true);
+  }
+}
+
+function phraseMarketLot(phrase) {
+  const text = escapeHtml(phrase.text);
+  const id = escapeAttr(phrase.id);
+  const textAttr = escapeAttr(phrase.text);
+  const price = Number(phrase.price) || 0;
+  const action = phrase.mine
+    ? (phrase.forSale
+      ? `<button class="mac-btn secondary nft-lot-btn" data-action="phrase-unlist" data-id="${id}">Снять</button>`
+      : `<button class="mac-btn secondary nft-lot-btn" data-action="phrase-sell" data-id="${id}" data-text="${textAttr}">Продать</button>`)
+    : `<button class="mac-btn primary-purple nft-lot-btn" data-action="phrase-buy" data-id="${id}" data-text="${textAttr}" data-price="${price}">Купить</button>`;
+  return `<div class="nft-lot-row nft-phrase-lot">
+    <div class="nft-lot-icon nft-phrase-lot-icon">“</div>
+    <div class="nft-lot-main">
+      <span class="nft-lot-name nft-phrase-lot-name">«${text}»</span>
+      <small title="ID: ${id}">${phrase.mine ? 'Ваша коллекция' : `${escapeHtml(phrase.ownerName)} · @${escapeHtml(phrase.ownerUsername)}`} · #${escapeHtml(phrase.id.slice(0, 8).toUpperCase())}</small>
+    </div>
+    ${phrase.forSale ? `<div class="nft-lot-price">${price.toLocaleString('ru-RU')} <span>💎</span></div>` : ''}
+    ${action}
+  </div>`;
+}
+
+async function openNftMarket(tab, refreshOnly = false) {
+  if (tab === 'usernames' || tab === 'phrases') nftMarketTab = tab;
+  const selected = nftMarketTab;
+  const request = ++nftMarketRequest;
   try {
-    const items = await api('/api/nft-market?all=1');
+    const items = await api(selected === 'phrases' ? '/api/nft-phrases/market' : '/api/nft-market?all=1');
+    if (request !== nftMarketRequest) return;
+    if (refreshOnly) {
+      const modal = $('modal-list');
+      const expectedTitle = selected === 'phrases' ? 'Маркет NFT-фраз' : 'Маркет юзернеймов';
+      if (!modal || modal.style.display === 'none' || modal.classList.contains('is-closing') || $('list-modal-title').textContent !== expectedTitle) return;
+    }
+    const tabs = `<div class="nft-market-tabs" role="tablist" aria-label="Разделы маркета">
+      <button type="button" role="tab" aria-selected="${selected === 'usernames'}" class="${selected === 'usernames' ? 'active' : ''}" data-action="market-tab" data-tab="usernames">Юзернеймы</button>
+      <button type="button" role="tab" aria-selected="${selected === 'phrases'}" class="${selected === 'phrases' ? 'active' : ''}" data-action="market-tab" data-tab="phrases">NFT-фразы <span>✦</span></button>
+    </div>`;
+
+    if (selected === 'phrases') {
+      const forSale = items.forSale || [];
+      const mine = items.mine || [];
+      openList('Маркет NFT-фраз', `
+        ${tabs}
+        <div class="nft-market-hero nft-phrase-market-hero">
+          <div><h3>Слова, которые остаются</h3>
+            <p>Создавайте фразы, общаясь в чатах, и обменивайтесь ими за рубины. Это коллекционные предметы внутри Runa, без блокчейна.</p></div>
+          <div class="nft-market-balance"><span>${Number(currentUser.rubies) || 0}</span> 💎</div>
+        </div>
+        <div class="list-section-title">На продаже · ${forSale.length}</div>
+        <div class="nft-lot-list">${forSale.length ? forSale.map(phraseMarketLot).join('') : '<p class="empty-feed">Пока нет фраз на продаже. Загляните позже.</p>'}</div>
+        <div class="list-section-title">Мои NFT-фразы · ${mine.length}</div>
+        <div class="nft-lot-list">${mine.length ? mine.map(phraseMarketLot).join('') : '<p class="empty-feed">Общайтесь в чатах — шанс создать первую фразу может выпасть в любой момент.</p>'}</div>
+      `);
+      return;
+    }
+
     const forSale = items.filter(n => n.forSale && !n.mine);
     const mine = items.filter(n => n.mine);
-
     const saleHtml = forSale.length ? forSale.map(n => `
       <div class="nft-lot-row">
         <div class="nft-lot-icon">@</div>
@@ -3237,6 +3343,7 @@ async function openNftMarket() {
       </div>`).join('') : '<p class="empty-feed">У вас пока нет NFT юзернеймов.</p>';
 
     openList('Маркет юзернеймов', `
+      ${tabs}
       <div class="nft-market-hero">
         <div>
           <h3>Короткие имена для профиля</h3>
@@ -3249,7 +3356,7 @@ async function openNftMarket() {
       <div class="list-section-title">Мои юзернеймы · ${mine.length}</div>
       <div class="nft-lot-list">${mineHtml}</div>
     `);
-  } catch (err) { toast(err.message, 'error'); }
+  } catch (err) { if (request === nftMarketRequest) toast(err.message, 'error'); }
 }
 
 function openPremium() {

@@ -29,7 +29,15 @@ Runa — это минималистичный мессенджер с откр�
 - 🔒 **Полная приватность данных** — все сообщения хранятся только в твоей локальной базе данных (SQLite). Ты полностью контролируешь, где и как хранятся данные.
 - ⚡ **Мгновенные сообщения** — чат работает в реальном времени благодаря WebSocket-соединению.
 - 🪶 **Минималистичность** — лёгкий код без лишних зависимостей. Идеально для изучения архитектуры чатов.
+- ✨ **NFT-фразы** — создавайте коллекционные фразы за общение и продавайте их на маркете за рубины.
 - ⏱️ **Быстрый старт** — запуск занимает меньше минуты после установки зависимостей.
+
+### ✨ NFT-фразы
+
+- Общайтесь в личных чатах, группах и каналах, где есть хотя бы ещё один участник. После трёх непустых текстовых сообщений за 10 минут каждое следующее подходящее сообщение (включая третье) даёт **1% шанс** получить предложение. Для защиты от спама учитываются сообщения с интервалом не менее 5 секунд и без одинакового текста подряд. «Избранное», сообщения самому себе, стикеры и вложения без текста не учитываются.
+- Предложение действует 24 часа и сохраняется при переподключении. Введите фразу длиной до 120 символов и запустите прокрутку: «Да» и «Нет» выпадают с равной вероятностью. При «Да» фраза попадает в профиль, при «Нет» введённый текст сбрасывается. Пропущенный шанс также исчезает. Количество фраз не ограничено.
+- Во вкладке «Фразы» профиля можно выставить предмет на маркет или снять с продажи. Покупка переводит фразу новому владельцу, рубины — продавцу, а операции сохраняются в истории кошелька. Автор фразы остаётся указан после продажи.
+- Название NFT используется в интерфейсе Runa: это **внутренние коллекционные объекты в SQLite, не токены блокчейна**. Шанс, результат и передача собственности проверяются сервером.
 
 ### 🚀 Быстрый старт
 
@@ -46,9 +54,11 @@ Runa — это минималистичный мессенджер с откр�
    ```bash
    npm start
    ```
-4. **Открой в браузере:** перейди по адресу `http://localhost:3000` (или тому порту, который указан в конфиге).
+4. **Открой в браузере:** перейди по адресу `http://localhost:3001` (или порту из переменной `PORT`).
 
-> ⚠️ **Важно про базу данных:** файл базы данных не хранится в репозитории из соображений безопасности и чистоты кода. При первом запуске сервер автоматически создаст пустую базу и необходимые таблицы.
+> ⚠️ **Важно про базу данных:** файл базы данных не хранится в репозитории из соображений безопасности и чистоты кода. При первом запуске сервер автоматически создаст пустую базу и необходимые таблицы. Путь к ней можно задать через `DATABASE_PATH`; по умолчанию используется `database.sqlite` в корне проекта.
+
+Для запуска автоматических тестов: `npm test`.
 
 ### 🛠️ Стек технологий
 
@@ -108,7 +118,14 @@ Runa is a minimalist open-source messenger built on the Node.js + WebSocket stac
 - 🔒 **Full data privacy** — all messages are stored only in your local SQLite database. You fully control where and how your data lives.
 - ⚡ **Real-time messaging** — instant chat powered by WebSockets.
 - 🪶 **Minimalist** — lightweight code with no bloated dependencies. Great for learning chat architecture.
+- ✨ **NFT phrases** — create collectible phrases by chatting and sell them for rubies on the market.
 - ⏱️ **Quick start** — up and running in under a minute after installing dependencies.
+
+### ✨ NFT phrases
+
+Chat in a direct conversation, group, or channel with at least one other member. After three qualifying text messages in ten minutes, each qualifying message (including the third) has a 1% chance of granting an offer. Messages must be at least five seconds apart and not repeat the preceding text; saved messages and media without text do not count. The offer lasts 24 hours and survives reconnection. Enter a phrase of up to 120 characters and spin: “Yes” and “No” are equally likely. A win adds the phrase to your profile; a loss or a skipped offer resets the chance. There is no collection limit.
+
+Owners can list or unlist phrases on the market for rubies. Purchases transfer ownership and funds atomically, retain the creator attribution, and appear in wallet history. These are **in-app SQLite collectibles, not blockchain tokens**; the server controls the offers and outcomes.
 
 ### 🚀 Getting started
 
@@ -125,9 +142,11 @@ Runa is a minimalist open-source messenger built on the Node.js + WebSocket stac
    ```bash
    npm start
    ```
-4. **Open in your browser:** go to `http://localhost:3000` (or the port set in your config).
+4. **Open in your browser:** go to `http://localhost:3001` (or the port set in `PORT`).
 
-> ⚠️ **Note about the database:** the database file is not stored in this repository for security and code cleanliness reasons. On first launch, the server automatically creates an empty database with the required tables.
+> ⚠️ **Note about the database:** the database file is not stored in this repository for security and code cleanliness reasons. On first launch, the server automatically creates an empty database with the required tables. Set `DATABASE_PATH` to override the default `database.sqlite` path.
+
+Run the automated tests with `npm test`.
 
 ### 🛠️ Tech stack
 

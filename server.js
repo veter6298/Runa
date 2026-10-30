@@ -8,6 +8,7 @@ const crypto = require('crypto');
 const multer = require('multer');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
+const { installNftPhrases } = require('./lib/nft-phrases');
 
 const app = express();
 const server = http.createServer(app);
@@ -43,7 +44,7 @@ app.use(express.static(publicDir, {
   }
 }));
 
-const db = new Database(path.join(__dirname, 'database.sqlite'));
+const db = new Database(process.env.DATABASE_PATH || path.join(__dirname, 'database.sqlite'));
 db.pragma('journal_mode = WAL');
 db.pragma('synchronous = NORMAL');
 db.pragma('busy_timeout = 5000');
@@ -643,6 +644,8 @@ function clearMessageReactions(messageId) {
   db.prepare('DELETE FROM message_reactions WHERE message_id = ?').run(messageId);
 }
 
+const nftPhrases = installNftPhrases({ app, db, io, requireAuth, emitUserUpdated, getProfileById });
+
 /* ------------------------------------------------------------------ */
 /*  СИДЫ                                                               */
 /* ------------------------------------------------------------------ */
@@ -850,6 +853,7 @@ app.delete('/api/user/me', requireAuth, (req, res) => {
   db.prepare('DELETE FROM clan_members WHERE user_id = ?').run(id);
   db.prepare('DELETE FROM sessions WHERE user_id = ?').run(id);
   db.prepare('DELETE FROM users WHERE id = ?').run(id);
+  nftPhrases.notifyUpdated([id]);
   res.json({ ok: true });
 });
 
@@ -1937,6 +1941,7 @@ app.delete('/api/admin/users/:id', requireAdmin, (req, res) => {
   db.prepare('DELETE FROM clan_members WHERE user_id = ?').run(target.id);
   db.prepare('DELETE FROM sessions WHERE user_id = ?').run(target.id);
   db.prepare('DELETE FROM users WHERE id = ?').run(target.id);
+  nftPhrases.notifyUpdated([target.id]);
   io.to(`user:${target.id}`).emit('force_logout', { reason: 'Аккаунт удалён' });
   res.json({ ok: true });
 });
@@ -2375,6 +2380,12 @@ io.on('connection', (socket) => {
       if (m.user_id !== uid) io.to(`user:${m.user_id}`).emit('notify_message', { chatId, message: msg });
     });
     emitChatsForChat(chatId);
+    try {
+      nftPhrases.onMessage({ userId: uid, chatType: chat.type, memberCount: members.length, text });
+    } catch (error) {
+      // A failure in the optional reward must not interrupt message delivery.
+      console.error('NFT phrase offer:', error);
+    }
   });
 
   socket.on('delete_message', ({ messageId } = {}) => {

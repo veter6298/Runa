@@ -12,9 +12,13 @@ const SO = {
   upTab: 'stories',
   selfStories: [],
   selfGifts: [],
+  selfPhrases: [],
   upStories: [],
   upGifts: [],
+  upPhrases: [],
   upUserId: null,
+  selfLoadId: 0,
+  upLoadId: 0,
   giveaways: [],
   gwTimer: null,
   gwChatId: null,
@@ -482,13 +486,40 @@ function profileGiftGrid(gifts, context) {
   </div>`;
 }
 
+function profilePhraseGrid(phrases, context) {
+  if (!phrases.length) {
+    return `<div class="profile-social-empty">
+      <span class="profile-social-empty-icon"><i data-lucide="quote"></i></span>
+      <b>NFT-фраз пока нет</b>
+      <small>${context === 'self' ? 'Общайтесь в чатах: иногда вам будет выпадать шанс создать свою фразу.' : 'Коллекционные фразы пользователя появятся здесь.'}</small>
+      ${context === 'self' ? '<button class="profile-social-action" data-action="market-phrases"><i data-lucide="shopping-bag"></i> Маркет фраз</button>' : ''}
+    </div>`;
+  }
+  return `<div class="profile-phrase-grid">${phrases.map(phrase => `
+    <article class="profile-phrase-card">
+      <div class="profile-phrase-label"><span>✦ NFT-ФРАЗА</span><span title="ID: ${escapeAttr(phrase.id)}">#${escapeHtml(phrase.id.slice(0, 8).toUpperCase())}</span></div>
+      <p>«${escapeHtml(phrase.text)}»</p>
+      <div class="profile-phrase-footer">
+        <small>${phrase.creatorUsername ? `Автор @${escapeHtml(phrase.creatorUsername)}` : 'Автор недоступен'}</small>
+        <span>${phrase.forSale ? `${Number(phrase.price).toLocaleString('ru-RU')} 💎` : 'В коллекции'}</span>
+      </div>
+      ${phrase.mine
+        ? (phrase.forSale
+          ? `<button type="button" class="profile-phrase-action" data-action="phrase-unlist" data-id="${escapeAttr(phrase.id)}">Снять с продажи</button>`
+          : `<button type="button" class="profile-phrase-action" data-action="phrase-sell" data-id="${escapeAttr(phrase.id)}" data-text="${escapeAttr(phrase.text)}">Продать</button>`)
+        : (phrase.forSale ? `<button type="button" class="profile-phrase-action" data-action="phrase-buy" data-id="${escapeAttr(phrase.id)}" data-text="${escapeAttr(phrase.text)}" data-price="${Number(phrase.price) || 0}">Купить</button>` : '')}
+    </article>`).join('')}</div>`;
+}
+
 function applyProfileTab(container, tab, context) {
   const prefix = context === 'self' ? 'self' : 'up';
   const storiesPanel = $(`${prefix}-tab-stories`);
   const giftsPanel = $(`${prefix}-tab-gifts`);
-  if (!storiesPanel || !giftsPanel) return;
+  const phrasesPanel = $(`${prefix}-tab-phrases`);
+  if (!storiesPanel || !giftsPanel || !phrasesPanel) return;
   storiesPanel.hidden = tab !== 'stories';
   giftsPanel.hidden = tab !== 'gifts';
+  phrasesPanel.hidden = tab !== 'phrases';
   const tabs = $(`${prefix}-profile-tabs`);
   if (tabs) tabs.querySelectorAll('.profile-bottom-tab').forEach(btn => {
     btn.classList.toggle('active', (context === 'self' ? btn.dataset.selfTab : btn.dataset.upTab) === tab);
@@ -499,13 +530,17 @@ function applyProfileTab(container, tab, context) {
 function renderSelfSocial() {
   const storiesPanel = $('self-tab-stories');
   const giftsPanel = $('self-tab-gifts');
-  if (!storiesPanel || !giftsPanel) return;
+  const phrasesPanel = $('self-tab-phrases');
+  if (!storiesPanel || !giftsPanel || !phrasesPanel) return;
   storiesPanel.innerHTML = profileStoryGrid(SO.selfStories, 'self');
   giftsPanel.innerHTML = profileGiftGrid(SO.selfGifts, 'self');
+  phrasesPanel.innerHTML = profilePhraseGrid(SO.selfPhrases, 'self');
   const sc = $('self-tab-stories-count');
   const gc = $('self-tab-gifts-count');
+  const pc = $('self-tab-phrases-count');
   if (sc) sc.textContent = SO.selfStories.length ? String(SO.selfStories.length) : '';
   if (gc) gc.textContent = SO.selfGifts.length ? String(SO.selfGifts.length) : '';
+  if (pc) pc.textContent = SO.selfPhrases.length ? String(SO.selfPhrases.length) : '';
   applyProfileTab($('self-profile-social'), SO.selfTab, 'self');
   soIcons();
 }
@@ -513,51 +548,56 @@ function renderSelfSocial() {
 function renderUpSocial() {
   const storiesPanel = $('up-tab-stories');
   const giftsPanel = $('up-tab-gifts');
-  if (!storiesPanel || !giftsPanel) return;
+  const phrasesPanel = $('up-tab-phrases');
+  if (!storiesPanel || !giftsPanel || !phrasesPanel) return;
   storiesPanel.innerHTML = profileStoryGrid(SO.upStories, 'user');
   giftsPanel.innerHTML = profileGiftGrid(SO.upGifts, 'user');
+  phrasesPanel.innerHTML = profilePhraseGrid(SO.upPhrases, currentUser && SO.upUserId === currentUser.id ? 'self' : 'user');
   const sc = $('up-tab-stories-count');
   const gc = $('up-tab-gifts-count');
+  const pc = $('up-tab-phrases-count');
   if (sc) sc.textContent = SO.upStories.length ? String(SO.upStories.length) : '';
   if (gc) gc.textContent = SO.upGifts.length ? String(SO.upGifts.length) : '';
+  if (pc) pc.textContent = SO.upPhrases.length ? String(SO.upPhrases.length) : '';
   applyProfileTab($('up-profile-social'), SO.upTab, 'user');
   soIcons();
 }
 
 async function loadSelfProfileSocial() {
   if (!currentUser) return;
-  $('self-tab-stories').innerHTML = '<div class="profile-social-loading"><span class="gifts-spinner"></span></div>';
-  $('self-tab-gifts').innerHTML = '<div class="profile-social-loading"><span class="gifts-spinner"></span></div>';
-  try {
-    const [storyRes, gifts] = await Promise.all([
-      api(`/api/stories/user/${encodeURIComponent(currentUser.id)}`),
-      api(`/api/users/${encodeURIComponent(currentUser.id)}/gifts`)
-    ]);
-    SO.selfStories = (storyRes && storyRes.stories) || [];
-    SO.selfGifts = gifts || [];
-  } catch (e) {
-    SO.selfStories = [];
-    SO.selfGifts = [];
-  }
+  const userId = currentUser.id;
+  const loadId = ++SO.selfLoadId;
+  ['stories', 'gifts', 'phrases'].forEach(tab => {
+    $(`self-tab-${tab}`).innerHTML = '<div class="profile-social-loading"><span class="gifts-spinner"></span></div>';
+  });
+  const [storyRes, gifts, phrases] = await Promise.all([
+    api(`/api/stories/user/${encodeURIComponent(userId)}`).catch(() => ({ stories: [] })),
+    api(`/api/users/${encodeURIComponent(userId)}/gifts`).catch(() => []),
+    api(`/api/users/${encodeURIComponent(userId)}/nft-phrases`).catch(() => [])
+  ]);
+  if (!currentUser || currentUser.id !== userId || SO.selfLoadId !== loadId) return;
+  SO.selfStories = (storyRes && storyRes.stories) || [];
+  SO.selfGifts = gifts || [];
+  SO.selfPhrases = phrases || [];
   renderSelfSocial();
 }
 
 async function loadUpProfileSocial(userId) {
   if (!userId) return;
   SO.upUserId = userId;
-  $('up-tab-stories').innerHTML = '<div class="profile-social-loading"><span class="gifts-spinner"></span></div>';
-  $('up-tab-gifts').innerHTML = '<div class="profile-social-loading"><span class="gifts-spinner"></span></div>';
-  try {
-    const [storyRes, gifts] = await Promise.all([
-      api(`/api/stories/user/${encodeURIComponent(userId)}`),
-      api(`/api/users/${encodeURIComponent(userId)}/gifts`)
-    ]);
-    SO.upStories = (storyRes && storyRes.stories) || [];
-    SO.upGifts = gifts || [];
-  } catch (e) {
-    SO.upStories = [];
-    SO.upGifts = [];
-  }
+  const loadId = ++SO.upLoadId;
+  ['stories', 'gifts', 'phrases'].forEach(tab => {
+    $(`up-tab-${tab}`).innerHTML = '<div class="profile-social-loading"><span class="gifts-spinner"></span></div>';
+  });
+  const [storyRes, gifts, phrases] = await Promise.all([
+    api(`/api/stories/user/${encodeURIComponent(userId)}`).catch(() => ({ stories: [] })),
+    api(`/api/users/${encodeURIComponent(userId)}/gifts`).catch(() => []),
+    api(`/api/users/${encodeURIComponent(userId)}/nft-phrases`).catch(() => [])
+  ]);
+  if (SO.upUserId !== userId || SO.upLoadId !== loadId) return;
+  SO.upStories = (storyRes && storyRes.stories) || [];
+  SO.upGifts = gifts || [];
+  SO.upPhrases = phrases || [];
   renderUpSocial();
 }
 
@@ -568,6 +608,16 @@ function refreshOpenProfileSocial() {
   if (upModal && upModal.style.display !== 'none' && SO.upUserId) loadUpProfileSocial(SO.upUserId);
   loadStoriesStrip();
 }
+
+// A market event should refresh only profiles which actually display the
+// affected owners, not cause every connected client to reload its stories.
+window.refreshPhraseProfiles = function refreshPhraseProfiles(ownerIds) {
+  const affected = id => !Array.isArray(ownerIds) || ownerIds.includes(id);
+  const selfModal = $('modal-profile-card');
+  if (currentUser && selfModal && selfModal.style.display !== 'none' && affected(currentUser.id)) loadSelfProfileSocial();
+  const upModal = $('modal-user-profile');
+  if (SO.upUserId && upModal && upModal.style.display !== 'none' && affected(SO.upUserId)) loadUpProfileSocial(SO.upUserId);
+};
 
 function setupProfileSocial() {
   const selfTabs = $('self-profile-tabs');
