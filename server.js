@@ -351,18 +351,11 @@ const publicUser = (u) => u ? {
 } : null;
 
 const isOnline = (id) => onlineSockets.has(id);
-const EMOJI_LIMITS = {
-  maxPacksPerUser: 3,
-  maxEmojisPerPack: 30,
-  maxEmojiSize: 256 * 1024,
-  maxEmojiName: 32
-};
-
-const emojiUpload = multer({
-  storage,
-  limits: { fileSize: EMOJI_LIMITS.maxEmojiSize },
-  fileFilter: (req, file, cb) => cb(null, /^image\/(png|webp|gif|jpeg)$/.test(file.mimetype))
-});
+function canCreateEmojiPacks(user) {
+  if (!user) return false;
+  if (user.is_admin) return true;
+  return !!user.is_premium;
+}
 
 function badgesFor(userId) {
   return db.prepare('SELECT id, icon, title, color FROM badges WHERE user_id = ? ORDER BY created_at ASC').all(userId)
