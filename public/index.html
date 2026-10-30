@@ -1190,6 +1190,9 @@
             <div class="profile-social-panel" id="up-tab-gifts" hidden>
               <div class="profile-social-loading"><span class="gifts-spinner"></span></div>
             </div>
+        <div class="profile-social-panel" id="up-tab-channels" hidden>
+          <div class="profile-social-loading"><span class="gifts-spinner"></span></div>
+        </div>
           </div>
           <div class="profile-bottom-tabs" id="up-profile-tabs">
             <button class="profile-bottom-tab active" data-up-tab="stories">
@@ -1198,6 +1201,7 @@
             <button class="profile-bottom-tab" data-up-tab="gifts">
               <i data-lucide="gift"></i><span>Подарки</span><em id="up-tab-gifts-count"></em>
             </button>
+            <button class="profile-bottom-tab" data-up-tab="channels"><i data-lucide="tv"></i><span>Каналы</span><em id="up-tab-channels-count"></em></button>
           </div>
         </div>
       </div>
@@ -1411,5 +1415,9 @@
   <script src="/vendor/lottie.min.js"></script>
   <script src="app.js"></script>
   <script src="social.js"></script>
+<div id="msg-context-menu" class="msg-context-menu" style="display: none;">
+  <button id="ctx-reply-btn" class="ctx-btn"><i data-lucide="reply"></i> Ответить</button>
+  <button id="ctx-forward-btn" class="ctx-btn"><i data-lucide="forward"></i> Переслать</button>
+</div>
 </body>
 </html>

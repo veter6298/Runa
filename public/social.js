@@ -489,6 +489,8 @@ function applyProfileTab(container, tab, context) {
   if (!storiesPanel || !giftsPanel) return;
   storiesPanel.hidden = tab !== 'stories';
   giftsPanel.hidden = tab !== 'gifts';
+  const channelsPanel = $('up-tab-channels');
+  if (channelsPanel) channelsPanel.hidden = tab !== 'channels';
   const tabs = $(`${prefix}-profile-tabs`);
   if (tabs) tabs.querySelectorAll('.profile-bottom-tab').forEach(btn => {
     btn.classList.toggle('active', (context === 'self' ? btn.dataset.selfTab : btn.dataset.upTab) === tab);
@@ -512,6 +514,8 @@ function renderSelfSocial() {
 
 function renderUpSocial() {
   const storiesPanel = $('up-tab-stories');
+  const channelsPanel = $('up-tab-channels');
+  if (channelsPanel) channelsPanel.innerHTML = '<div style="padding: 20px; text-align: center; opacity: 0.5;">Каналы пока не добавлены</div>';
   const giftsPanel = $('up-tab-gifts');
   if (!storiesPanel || !giftsPanel) return;
   storiesPanel.innerHTML = profileStoryGrid(SO.upStories, 'user');
