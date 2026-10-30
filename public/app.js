@@ -1,5 +1,5 @@
 'use strict';
-linkify
+
 /* ================================================================== */
 /*  СОСТОЯНИЕ                                                         */
 /* ================================================================== */
@@ -883,7 +883,7 @@ function connectSocket() {
     const idx = currentMessages.findIndex(m => m.id === msg.id);
     if (idx >= 0) currentMessages[idx] = { ...currentMessages[idx], ...msg };
     const bubble = document.querySelector(`.bubble[data-id="${msg.id}"] .msg-text`);
-    if (bubble) bubble.innerHTML = linkify(msg.text || '');
+    if (bubble) bubble.innerHTML = renderTextWithEmoji(msg.text || '');
   });
 
   socket.on('message_reactions', ({ messageId, reactions }) => {
@@ -1475,7 +1475,7 @@ function appendMessage(msg, scroll = true) {
       <span class="reply-quote-text">${escapeHtml(quoteText)}</span>
     </div>`;
   }
-  if (msg.text) inner += `<div class="msg-text">${linkify(msg.text)}</div>`;
+  if (msg.text) inner += `<div class="msg-text">${renderTextWithEmoji(msg.text)}</div>`;
   if (msg.file_type === 'sticker' && msg.file_url) {
     bubble.classList.add('sticker-bubble');
     inner += `<img class="msg-sticker" src="${escapeAttr(msg.file_url)}" alt="Стикер" loading="lazy" draggable="false">`;
