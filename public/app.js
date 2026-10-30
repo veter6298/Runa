@@ -4987,12 +4987,7 @@ async function loadEmojiCache() {
 }
 
 function renderTextWithEmoji(text) {
-  const escaped = String(text || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-  return escaped.replace(/:([a-z0-9_]+)\/([a-z0-9_]+):/gi, (full) => {
+  return linkify(text || '').replace(/:([a-z0-9_]+)\/([a-z0-9_]+):/gi, (full) => {
     const url = emojiCache.get(full);
     if (!url) return full;
     return `<img class="custom-emoji" src="${url}" alt="${full}" draggable="false">`;
