@@ -7357,3 +7357,32 @@ body.theme-light .send-message-btn {
   color: var(--md-sys-color-on-primary) !important;
   font-weight: 700 !important;
 }
+
+/* Контекстное меню сообщения */
+.msg-context-menu {
+  position: fixed;
+  bottom: -100px;
+  left: 0;
+  right: 0;
+  background: var(--bg-secondary, #222);
+  border-top: 1px solid var(--border-color, #444);
+  display: flex;
+  justify-content: space-around;
+  padding: 10px;
+  transition: bottom 0.2s ease;
+  z-index: 1000;
+}
+.msg-context-menu.active {
+  bottom: 0;
+}
+.ctx-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-color, #fff);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  cursor: pointer;
+}
