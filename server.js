@@ -30,12 +30,6 @@ const imageUpload = multer({
   limits: { fileSize: 15 * 1024 * 1024 },
   fileFilter: (req, file, cb) => cb(null, /^image\//.test(file.mimetype))
 });
-const upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 } });
-const imageUpload = multer({
-  storage,
-  limits: { fileSize: 15 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => cb(null, /^image\//.test(file.mimetype))
-});
 app.use(express.json({ limit: '2mb' }));
 const publicDir = path.join(__dirname, 'public');
 app.use(express.static(publicDir, {
@@ -364,7 +358,7 @@ function badgesFor(userId) {
     .map(b => ({ ...b, color: b.color || '' }));
 }
 
-function nftFor(userI d) {
+function nftFor(userId) {
   return db.prepare(`SELECT id, username, for_sale, price, listed_at
     FROM nft_usernames WHERE user_id = ? ORDER BY created_at ASC`).all(userId)
     .map(n => ({ id: n.id, username: n.username, forSale: !!n.for_sale, price: n.price || 0, listedAt: n.listed_at || null }));
