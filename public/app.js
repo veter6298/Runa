@@ -1336,6 +1336,7 @@ function openChat(chat) {
   chatDismissed = false;
   chatViewCloseToken++;
   currentChat = chat;
+  setTimeout(() => { const draft = localStorage.getItem("draft_" + chat.id); if (draft) { const ta = $("composer-textarea"); if (ta) ta.value = draft; } }, 100);
   currentMessages = [];
   hasMoreHistory = false;
   loadingOlder = false;
@@ -5464,3 +5465,29 @@ document.addEventListener('DOMContentLoaded', () => {
     if (menu && !menu.contains(e.target)) menu.classList.remove('active');
   });
 });
+
+// Сохранение черновиков
+document.addEventListener('DOMContentLoaded', () => {
+  const ta = document.getElementById('composer-textarea');
+  if (ta) {
+    ta.addEventListener('input', () => {
+      if (currentChat) {
+        if (ta.value.trim() === '') {
+          localStorage.removeItem('draft_' + currentChat.id);
+        } else {
+          localStorage.setItem('draft_' + currentChat.id, ta.value);
+        }
+      }
+    });
+  }
+});
+
+// Очистка черновика после отправки
+const originalSendBtn = document.getElementById('btn-send');
+if (originalSendBtn) {
+  const oldSend = originalSendBtn.onclick;
+  originalSendBtn.onclick = function(e) {
+    if (currentChat) localStorage.removeItem('draft_' + currentChat.id);
+    if (oldSend) oldSend.call(this, e);
+  };
+}
