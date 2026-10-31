@@ -38,6 +38,28 @@ const emojiUpload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => cb(null, /^image\/(png|webp|gif|jpeg)$/.test(file.mimetype))
 });
+
+/* Файлы пользовательских паков стикеров складываем в public/stickers/... —
+   так send_message-валидатор (/stickers/...) пропускает их без изменений. */
+const stickerDir = path.join(__dirname, 'public', 'stickers', 'user_packs');
+if (!fs.existsSync(stickerDir)) fs.mkdirSync(stickerDir, { recursive: true });
+const stickerStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.join(stickerDir, req.params.id || 'tmp');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const ext = (path.extname(file.originalname) || '').toLowerCase().slice(0, 5);
+    cb(null, `${uuidv4()}${ext}`);
+  }
+});
+const STICKER_LIMITS = { maxStickersPerPack: 120, maxTitleLength: 32 };
+const stickerUpload = multer({
+  storage: stickerStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => cb(null, /^image\/(png|webp|gif|jpeg|svg\+xml)$/.test(file.mimetype))
+});
 app.use(express.json({ limit: '2mb' }));
 const publicDir = path.join(__dirname, 'public');
 app.use(express.static(publicDir, {
@@ -287,6 +309,13 @@ db.exec(`
     winner INTEGER DEFAULT 0,
     PRIMARY KEY (giveaway_id, user_id)
   );
+  CREATE TABLE IF NOT EXISTS sticker_packs (
+    id TEXT PRIMARY KEY,
+    owner_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    stickers TEXT NOT NULL DEFAULT '[]',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 `);
 
 db.exec(`
@@ -294,6 +323,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_story_views_user ON story_views(user_id);
   CREATE INDEX IF NOT EXISTS idx_giveaways_chat ON giveaways(chat_id, status, ends_at);
   CREATE INDEX IF NOT EXISTS idx_giveaway_participants ON giveaway_participants(giveaway_id);
+  CREATE INDEX IF NOT EXISTS idx_sticker_packs_owner ON sticker_packs(owner_id);
 `);
 
 /* ------------------------------------------------------------------ */
@@ -1575,6 +1605,75 @@ function processExpiredGiveaways() {
 setInterval(processExpiredGiveaways, 30000).unref();
 
 /* ------------------------------------------------------------------ */
+/*  СТИКЕРЫ: ПОЛЬЗОВАТЕЛЬСКИЕ ПАКИ (конструктор в интерфейсе)           */
+/* ------------------------------------------------------------------ */
+const stickerPackOut = (row) => {
+  let stickers = [];
+  try { stickers = JSON.parse(row.stickers || '[]'); } catch { stickers = []; }
+  return { id: row.id, title: row.title, owner_id: row.owner_id, stickers: stickers.filter(Boolean) };
+};
+
+app.get('/api/stickers/packs', requireAuth, (req, res) => {
+  const rows = db.prepare('SELECT * FROM sticker_packs ORDER BY created_at ASC').all();
+  res.json({ packs: rows.map(stickerPackOut) });
+});
+
+app.post('/api/stickers/packs', requireAuth, (req, res) => {
+  if (!canCreateEmojiPacks(req.user)) {
+    return res.status(403).json({ error: 'Создание паков доступно премиум или админам' });
+  }
+  const title = String(req.body && req.body.title || '').trim().slice(0, STICKER_LIMITS.maxTitleLength);
+  if (!title) return res.status(400).json({ error: 'Введите название пака' });
+
+  const owned = db.prepare('SELECT COUNT(*) c FROM sticker_packs WHERE owner_id = ?').get(req.user.id).c;
+  if (owned >= 50) return res.status(400).json({ error: 'Слишком много паков' });
+
+  const id = uuidv4();
+  db.prepare('INSERT INTO sticker_packs (id, owner_id, title, stickers) VALUES (?, ?, ?, ?)')
+    .run(id, req.user.id, title, '[]');
+  res.json({ ok: true, pack: { id, title, owner_id: req.user.id, stickers: [] } });
+});
+
+app.post('/api/stickers/packs/:id/upload', requireAuth, stickerUpload.single('file'), (req, res) => {
+  const pack = db.prepare('SELECT * FROM sticker_packs WHERE id = ?').get(req.params.id);
+  if (!pack) return res.status(404).json({ error: 'Пак не найден' });
+  if (pack.owner_id !== req.user.id && !req.user.is_admin) {
+    return res.status(403).json({ error: 'Это не ваш пак' });
+  }
+  if (!req.file) return res.status(400).json({ error: 'Выберите картинку (png/webp/gif/jpg/svg)' });
+
+  let stickers = [];
+  try { stickers = JSON.parse(pack.stickers || '[]'); } catch { stickers = []; }
+  if (stickers.length >= STICKER_LIMITS.maxStickersPerPack) {
+    // Не оставляем висячий файл: лимит проверяем до записи.
+    const fileUrl = req.file.path;
+    fs.unlink(fileUrl, (err) => { if (err) console.error('sticker cleanup:', err); });
+    return res.status(400).json({ error: `Максимум ${STICKER_LIMITS.maxStickersPerPack} стикеров в паке` });
+  }
+  const url = `/stickers/user_packs/${pack.id}/${req.file.filename}`;
+  stickers.push(url);
+  db.prepare('UPDATE sticker_packs SET stickers = ? WHERE id = ?').run(JSON.stringify(stickers), pack.id);
+  res.json({ ok: true, url, count: stickers.length });
+});
+
+app.delete('/api/stickers/packs/:id', requireAuth, (req, res) => {
+  const pack = db.prepare('SELECT * FROM sticker_packs WHERE id = ?').get(req.params.id);
+  if (!pack) return res.status(404).json({ error: 'Пак не найден' });
+  if (pack.owner_id !== req.user.id && !req.user.is_admin) {
+    return res.status(403).json({ error: 'Это не ваш пак' });
+  }
+
+  let stickers = [];
+  try { stickers = JSON.parse(pack.stickers || '[]'); } catch { stickers = []; }
+  const dir = path.join(stickerDir, pack.id);
+  fs.rm(dir, { recursive: true, force: true }, (err) => {
+    if (err) console.error('sticker pack dir cleanup:', err);
+  });
+  db.prepare('DELETE FROM sticker_packs WHERE id = ?').run(pack.id);
+  res.json({ ok: true });
+});
+
+/* ------------------------------------------------------------------ */
 /*  ПОДАРКИ (каталог пуст — наполним позже)                            */
 /* ------------------------------------------------------------------ */
 app.get('/api/gifts', requireAuth, (req, res) => {
@@ -2533,7 +2632,7 @@ io.on('connection', (socket) => {
     let fileName = data.fileName ? String(data.fileName).slice(0, 200) : null;
     if (fileType === 'sticker') {
       // Стикеры — только из локальной библиотеки, без внешних ссылок.
-      if (!fileUrl || !/^\/stickers\/[a-z0-9_\-./]+\.(webp|png|gif)$/i.test(fileUrl) || fileUrl.includes('..')) return;
+      if (!fileUrl || !/^\/stickers\/[a-z0-9_\-./]+\.(webp|png|gif|jpe?g|svg)$/i.test(fileUrl) || fileUrl.includes('..')) return;
       fileName = fileName || 'sticker.webp';
     }
     if (!text && !fileUrl) return;

@@ -36,6 +36,7 @@ let reactionTarget = null;
 let chatSettings = null;
 let stickerPacks = null;
 let stickerActivePack = 0;
+let stickerFilesInput = null; // input[type=file] конструктора паков
 let stickerPanelOpen = false;
 let chatListSignature = '';
 let chatDismissed = false;
@@ -1654,6 +1655,12 @@ async function loadStickerPacks() {
   } catch (e) {
     stickerPacks = [STICKER_FALLBACK_PACK];
   }
+  /* Пользовательские паки (созданные в интерфейсе) показываем поверх статических */
+  try {
+    const res = await api('/api/stickers/packs');
+    const own = (res && Array.isArray(res.packs) ? res.packs : []).filter(p => p.stickers.length);
+    if (own.length) stickerPacks = [...own, ...stickerPacks];
+  } catch (e) { /* без прав на паки панель просто покажет статические паки */ }
   return stickerPacks;
 }
 
@@ -1754,6 +1761,127 @@ function setupStickers() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && stickerPanelOpen) closeStickerPanel();
   });
+
+  /* ---------- конструктор паков стикеров ---------- */
+  $('btn-sticker-creator').addEventListener('click', () => {
+    document.getElementById('modal-sticker-creator').style.display = 'block';
+    resetStickerCreator();
+    if (window.lucide) lucide.createIcons();
+  });
+
+  const filesBtn = $('btn-sticker-files');
+  const filesInput = $('sticker-pack-files');
+  stickerFilesInput = filesInput;
+  filesBtn.addEventListener('click', () => filesInput.click());
+  filesInput.addEventListener('change', () => renderStickerUploadPreview());
+
+  $('btn-save-sticker-pack').addEventListener('click', saveStickerPack);
+
+  $('btn-my-sticker-packs').addEventListener('click', showMyStickerPacks);
+  $('btn-sticker-creator-back').addEventListener('click', () => {
+    document.getElementById('sticker-creator-create-view').style.display = '';
+    document.getElementById('sticker-creator-manage-view').style.display = 'none';
+  });
+}
+
+/* ---------- конструктор паков: логика ---------- */
+const STICKER_CREATOR_MAX = 60;
+
+function resetStickerCreator() {
+  $('sticker-pack-title-input').value = '';
+  stickerFilesInput.value = '';
+  $('sticker-upload-grid').innerHTML = '';
+  $('sticker-creator-hint').textContent = 'До 60 картинок, каждая ≤ 5 МБ (png/webp/gif/jpg/svg)';
+  document.getElementById('sticker-creator-create-view').style.display = '';
+  document.getElementById('sticker-creator-manage-view').style.display = 'none';
+}
+
+function renderStickerUploadPreview() {
+  const grid = $('sticker-upload-grid');
+  const files = Array.from(stickerFilesInput.files || []).slice(0, STICKER_CREATOR_MAX);
+  grid.innerHTML = files.map((f, i) => `
+    <div class="sticker-upload-item">
+      <img src="${URL.createObjectURL(f)}" alt="" loading="lazy">
+      <span class="sticker-upload-remove" data-idx="${i}" title="Убрать">&times;</span>
+    </div>`).join('');
+  grid.querySelectorAll('.sticker-upload-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const dt = new DataTransfer();
+      Array.from(stickerFilesInput.files).forEach((f, i) => { if (i !== Number(btn.dataset.idx)) dt.items.add(f); });
+      stickerFilesInput.files = dt.files;
+      renderStickerUploadPreview();
+    });
+  });
+  if (files.length) $('sticker-creator-hint').textContent = `Выбрано: ${files.length}`;
+}
+
+async function saveStickerPack() {
+  const title = $('sticker-pack-title-input').value.trim();
+  const hint = $('sticker-creator-hint');
+  const files = Array.from(stickerFilesInput.files || []);
+  if (!title) return (hint.textContent = 'Придумайте название пака');
+  if (!files.length) return (hint.textContent = 'Выберите хотя бы одну картинку');
+
+  const btn = $('btn-save-sticker-pack');
+  btn.disabled = true;
+  hint.textContent = 'Создаем пак…';
+  try {
+    const created = await api('/api/stickers/packs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title })
+    });
+    const pack = created.pack;
+    for (const file of files.slice(0, STICKER_CREATOR_MAX)) {
+      const fd = new FormData();
+      fd.append('file', file);
+      await api(`/api/stickers/packs/${pack.id}/upload`, { method: 'POST', body: fd });
+    }
+    stickerPacks = null;
+    stickerActivePack = 0;
+    document.getElementById('modal-sticker-creator').style.display = 'none';
+    toast(`Пак «${title}» создан (${Math.min(files.length, STICKER_CREATOR_MAX)} шт.)`);
+    if (stickerPanelOpen) await toggleStickerPanel(true);
+  } catch (e) {
+    hint.textContent = e.message || 'Не получилось создать пак';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function showMyStickerPacks() {
+  document.getElementById('sticker-creator-create-view').style.display = 'none';
+  document.getElementById('sticker-creator-manage-view').style.display = '';
+  const list = $('my-sticker-packs-list');
+  list.innerHTML = '<p class="empty-feed">Загрузка…</p>';
+  try {
+    const res = await api('/api/stickers/packs');
+    const mine = (res.packs || []).filter(p => p.owner_id === currentUser.id);
+    list.innerHTML = mine.length ? mine.map(p => `
+      <div class="my-sticker-pack-row">
+        <img src="${escapeAttr(p.stickers[0])}" alt="">
+        <div class="my-sticker-pack-info">
+          <div class="my-sticker-pack-name">${escapeHtml(p.title)}</div>
+          <div class="my-sticker-pack-count">${p.stickers.length} шт.</div>
+        </div>
+        <button class="win-btn" data-del-pack="${escapeAttr(p.id)}" title="Удалить пак"><i data-lucide="trash-2"></i></button>
+      </div>`).join('')
+      : '<p class="empty-feed">У вас пока нет своих паков</p>';
+    if (window.lucide) lucide.createIcons();
+    list.querySelectorAll('[data-del-pack]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Удалить пак вместе со стикерами?')) return;
+        try {
+          await api(`/api/stickers/packs/${btn.dataset.delPack}`, { method: 'DELETE' });
+          stickerPacks = null;
+          await showMyStickerPacks();
+          if (stickerPanelOpen) await toggleStickerPanel(true);
+        } catch (e) { toast(e.message || 'Не удалось удалить'); }
+      });
+    });
+  } catch (e) {
+    list.innerHTML = '<p class="empty-feed">Не удалось загрузить</p>';
+  }
 }
 
 function startReply(msg) {

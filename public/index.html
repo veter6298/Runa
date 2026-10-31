@@ -205,6 +205,7 @@
           <div class="sticker-panel" id="sticker-panel" style="display: none;">
             <div class="sticker-panel-head">
               <span class="sticker-panel-title">Стикеры</span>
+              <button class="sticker-panel-add" id="btn-sticker-creator" title="Создать пак"><i data-lucide="plus"></i></button>
               <button class="sticker-panel-close" id="sticker-panel-close" title="Закрыть"><i data-lucide="x"></i></button>
             </div>
             <div class="sticker-grid" id="sticker-grid"></div>
@@ -1181,6 +1182,31 @@
 
   <div class="image-lightbox" id="image-lightbox" style="display:none;">
     <img id="lightbox-img" alt="">
+  </div>
+
+  <!-- ==================== КОНСТРУКТОР РАКОВ СТИКЕРОВ ==================== -->
+  <div class="modal-backdrop" id="modal-sticker-creator" style="display: none;">
+    <div class="list-window">
+      <div class="wallet-topbar">
+        <span class="wallet-header-title" id="sticker-creator-title">Мои стикеры</span>
+        <button class="win-btn close-btn" data-close="modal-sticker-creator"><i data-lucide="x"></i></button>
+      </div>
+      <div class="list-modal-body">
+        <div id="sticker-creator-create-view">
+          <input class="modal-search-input" id="sticker-pack-title-input" placeholder="Название пака..." maxlength="32">
+          <button class="mac-btn secondary" id="btn-sticker-files" style="width:100%; margin-top:12px;"><i data-lucide="image-plus"></i> Выбрать картинки</button>
+          <input type="file" id="sticker-pack-files" accept="image/png,image/webp,image/gif,image/jpeg,image/svg+xml" multiple style="display:none">
+          <div class="sticker-upload-grid" id="sticker-upload-grid"></div>
+          <div class="field-hint" id="sticker-creator-hint"></div>
+          <button class="mac-btn primary-purple" id="btn-save-sticker-pack" style="width:100%; margin-top:8px;"><i data-lucide="plus"></i> Создать пак</button>
+          <button class="mac-btn secondary" id="btn-my-sticker-packs" style="width:100%; margin-top:8px;"><i data-lucide="folder"></i> Мои паки</button>
+        </div>
+        <div id="sticker-creator-manage-view" style="display:none;">
+          <div class="list-results" id="my-sticker-packs-list"></div>
+          <button class="mac-btn secondary" id="btn-sticker-creator-back" style="width:100%; margin-top:12px;"><i data-lucide="arrow-left"></i> Назад</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ==================== КРАСИВЫЙ ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ ==================== -->
