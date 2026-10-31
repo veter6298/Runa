@@ -5345,3 +5345,48 @@ document.getElementById('btn-2fa-login-submit')?.addEventListener('click', async
     err.style.display = 'block';
   }
 });
+
+// Контекстное меню (долгое нажатие)
+let longPressTimer;
+let currentContextMsg = null;
+
+function setupContextMenu(bubble, msg) {
+  if (!bubble) return;
+  const startPress = (e) => {
+    longPressTimer = setTimeout(() => {
+      currentContextMsg = msg;
+      const menu = document.getElementById('msg-context-menu');
+      if (menu) menu.classList.add('active');
+      if (navigator.vibrate) navigator.vibrate(50);
+    }, 500);
+  };
+  const cancelPress = () => clearTimeout(longPressTimer);
+  bubble.addEventListener('mousedown', startPress);
+  bubble.addEventListener('touchstart', startPress);
+  bubble.addEventListener('mouseup', cancelPress);
+  bubble.addEventListener('mouseleave', cancelPress);
+  bubble.addEventListener('touchend', cancelPress);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const replyBtn = document.getElementById('ctx-reply-btn');
+  if (replyBtn) {
+    replyBtn.addEventListener('click', () => {
+      if (currentContextMsg && typeof setReplyTarget === 'function') {
+        setReplyTarget(currentContextMsg);
+      }
+      document.getElementById('msg-context-menu').classList.remove('active');
+    });
+  }
+  const forwardBtn = document.getElementById('ctx-forward-btn');
+  if (forwardBtn) {
+    forwardBtn.addEventListener('click', () => {
+      alert('Пересылка пока не реализована');
+      document.getElementById('msg-context-menu').classList.remove('active');
+    });
+  }
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('msg-context-menu');
+    if (menu && !menu.contains(e.target)) menu.classList.remove('active');
+  });
+});
