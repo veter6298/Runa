@@ -316,6 +316,23 @@ db.exec(`
     stickers TEXT NOT NULL DEFAULT '[]',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
+  CREATE TABLE IF NOT EXISTS emoji_packs (
+    id TEXT PRIMARY KEY,
+    owner_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    slug TEXT NOT NULL UNIQUE,
+    description TEXT DEFAULT '',
+    official INTEGER DEFAULT 0,
+    is_public INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS emojis (
+    id TEXT PRIMARY KEY,
+    pack_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    file_url TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 `);
 
 db.exec(`
@@ -1619,9 +1636,6 @@ app.get('/api/stickers/packs', requireAuth, (req, res) => {
 });
 
 app.post('/api/stickers/packs', requireAuth, (req, res) => {
-  if (!canCreateEmojiPacks(req.user)) {
-    return res.status(403).json({ error: 'Создание паков доступно премиум или админам' });
-  }
   const title = String(req.body && req.body.title || '').trim().slice(0, STICKER_LIMITS.maxTitleLength);
   if (!title) return res.status(400).json({ error: 'Введите название пака' });
 
