@@ -643,6 +643,72 @@ body.theme-runa-dark {
   justify-content: center;
 }
 
+/* ================== ФОРМАТИРОВАНИЕ СООБЩЕНИЙ ================== */
+.fmt-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 14px 6px;
+}
+.fmt-btn {
+  background: none;
+  border: none;
+  border-radius: 8px;
+  min-width: 30px;
+  height: 28px;
+  padding: 0 8px;
+  color: var(--text-gray);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+}
+.fmt-btn b, .fmt-btn i, .fmt-btn s, .fmt-btn code { font-size: 13px; }
+.fmt-btn:hover { background: rgba(255, 255, 255, .08); color: #fff; }
+.fmt-btn:active { transform: scale(.92); }
+
+.msg-spoiler {
+  background: rgba(255, 255, 255, .12);
+  color: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background .2s ease, color .2s ease;
+  user-select: none;
+  text-shadow: none;
+}
+.msg-spoiler:not(.revealed) * { visibility: hidden; }
+.msg-spoiler:not(.revealed) a { visibility: hidden; }
+.msg-spoiler.revealed {
+  background: rgba(255, 255, 255, .06);
+  color: inherit;
+  cursor: inherit;
+  user-select: text;
+}
+
+.msg-quote {
+  margin: 4px 0;
+  padding: 6px 10px;
+  border-left: 3px solid var(--apple-purple);
+  background: rgba(255, 255, 255, .05);
+  border-radius: 8px;
+}
+.msg-pre {
+  margin: 4px 0;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, .3);
+  border-radius: 8px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 13px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+.msg-code {
+  padding: 1px 5px;
+  background: rgba(0, 0, 0, .3);
+  border-radius: 6px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 13px;
+}
+
 /* ================== ВЫДВИЖНОЕ МЕНЮ (ШТОРКА) ================== */
 .drawer-overlay {
   position: fixed;

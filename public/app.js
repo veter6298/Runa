@@ -110,6 +110,38 @@ function linkify(text) {
     '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
 }
 
+/* ---------- форматирование сообщений (как в Telegram) ---------- */
+/* Применяется к уже экранированному тексту, чтобы пользовательская
+   разметка не могла подменить HTML. */
+function formatInlineHtml(escaped) {
+  return escaped
+    .replace(/\|\|([\s\S]+?)\|\|/g, '<span class="msg-spoiler">$1</span>')
+    .replace(/```([\s\S]+?)```/g, '<pre class="msg-pre">$1</pre>')
+    .replace(/`([^`\n]+)`/g, '<code class="msg-code">$1</code>')
+    .replace(/\*\*([\s\S]+?)\*\*/g, '<b>$1</b>')
+    .replace(/__([\s\S]+?)__/g, '<i>$1</i>')
+    .replace(/~~([\s\S]+?)~~/g, '<s>$1</s>');
+}
+
+/* Строки, начинающиеся с "> ", сворачиваются в блок цитаты. */
+function formatQuoteBlocks(html) {
+  const lines = html.split('\n');
+  const out = [];
+  let quoteLines = [];
+  const flushQuote = () => {
+    if (quoteLines.length) {
+      out.push(`<blockquote class="msg-quote">${quoteLines.join('<br>')}</blockquote>`);
+      quoteLines = [];
+    }
+  };
+  for (const line of lines) {
+    if (/^&gt;\s?/.test(line)) quoteLines.push(line.replace(/^&gt;\s?/, ''));
+    else { flushQuote(); out.push(line); }
+  }
+  flushQuote();
+  return out.join('\n');
+}
+
 function parseDate(value) {
   if (!value) return new Date();
   if (value instanceof Date) return value;
@@ -2334,6 +2366,45 @@ function setupWorkspace() {
   });
 
   attachBtn.addEventListener('click', () => fileInput.click());
+
+  /* ---------- панель форматирования (как в Telegram) ---------- */
+  const FMT_WRAPS = {
+    bold: ['**', '**'],
+    italic: ['__', '__'],
+    strike: ['~~', '~~'],
+    code: ['`', '`'],
+    spoiler: ['||', '||']
+  };
+  function applyFormatting(kind) {
+    if (!composer || composer.disabled) return;
+    const start = composer.selectionStart;
+    const end = composer.selectionEnd;
+    const selected = composer.value.slice(start, end);
+    if (kind === 'quote') {
+      const source = selected || '';
+      const quoted = source.split('\n').map(l => '> ' + l).join('\n');
+      composer.setRangeText(quoted, start, end, 'end');
+    } else {
+      const pair = FMT_WRAPS[kind];
+      if (!pair) return;
+      const inner = selected || 'текст';
+      composer.setRangeText(pair[0] + inner + pair[1], start, end, 'select');
+    }
+    composer.style.height = Math.min(composer.scrollHeight, 140) + 'px';
+    composer.focus();
+    composer.dispatchEvent(new Event('input', { bubbles: false }));
+  }
+  document.querySelectorAll('.fmt-btn[data-fmt]').forEach(btn => {
+    btn.addEventListener('mousedown', (e) => e.preventDefault()); // не терять выделение в textarea
+    btn.addEventListener('click', () => applyFormatting(btn.dataset.fmt));
+  });
+
+  /* ---------- раскрытие спойлеров в сообщениях ---------- */
+  document.addEventListener('click', (e) => {
+    const spoiler = e.target instanceof Element && e.target.closest('.msg-spoiler');
+    if (spoiler && !spoiler.classList.contains('revealed')) spoiler.classList.add('revealed');
+  });
+
   fileInput.addEventListener('change', async () => {
     const file = fileInput.files[0];
     if (!file || !currentChat) return;
@@ -5099,7 +5170,10 @@ async function loadEmojiCache() {
 }
 
 function renderTextWithEmoji(text) {
-  return linkify(text || '').replace(/:([a-z0-9_]+)\/([a-z0-9_]+):/gi, (full) => {
+  let html = formatQuoteBlocks(formatInlineHtml(escapeHtml(text || '')));
+  html = html.replace(/(https?:\/\/[^\s<]+)/g,
+    '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+  return html.replace(/:([a-z0-9_]+)\/([a-z0-9_]+):/gi, (full) => {
     const url = emojiCache.get(full);
     if (!url) return full;
     return `<img class="custom-emoji" src="${url}" alt="${full}" draggable="false">`;
