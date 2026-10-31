@@ -10,8 +10,8 @@
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui", "browser"],
   "orientation": "any",
-  "background_color": "#0a0a0c",
-  "theme_color": "#0a0a0c",
+  "background_color": "#08070d",
+  "theme_color": "#08070d",
   "categories": ["social", "communication"],
   "prefer_related_applications": false,
   "icons": [

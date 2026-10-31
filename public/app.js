@@ -1050,6 +1050,17 @@ function updateUserUI() {
   text('drawer-username', `@${u.username}`);
   text('card-name', name);
   text('card-username', u.username || '');
+  const statusText = String(u.statusText || '').trim();
+  text('card-status', statusText || 'Статус пока не задан');
+  text('card-status-emoji', u.statusEmoji || '✦');
+  text('card-cover-username', u.username || 'user');
+  text('card-passport-username', u.username || 'user');
+  text('card-passport-status', statusText || '—');
+  text('card-passport-city', u.city || '—');
+  text('card-rubies', Number(u.rubies || 0).toLocaleString('ru-RU'));
+  text('card-profile-views', Number(u.profileViews || 0).toLocaleString('ru-RU'));
+  const statusEl = $('card-status');
+  if (statusEl) statusEl.classList.toggle('is-empty', !statusText);
   const editUsernameInput = $('edit-username-val');
   const editUsernameVisible = !!(editUsernameInput && editUsernameInput.offsetParent);
   if (editUsernameInput && (!editUsernameVisible || document.activeElement !== editUsernameInput)) {
@@ -1087,6 +1098,12 @@ function updateUserUI() {
   const nameInput = $('edit-name-val'); if (nameInput) nameInput.value = name;
   const bioInput = $('edit-bio-val'); if (bioInput) bioInput.value = u.bio || '';
   const cityInput = $('edit-city-val'); if (cityInput) cityInput.value = u.city || '';
+  const statusInput = $('edit-status-val'); if (statusInput) statusInput.value = u.statusText || '';
+  const statusEmojiInput = $('edit-status-emoji'); if (statusEmojiInput) statusEmojiInput.value = u.statusEmoji || '';
+  text('edit-preview-name', name);
+  text('edit-preview-handle', `@${u.username || 'username'}`);
+  text('edit-preview-status-emoji', u.statusEmoji || '✦');
+  text('edit-preview-status-text', statusText || 'Добавь статус');
 
   text('card-bio', u.bio || '');
   const bioEl = $('card-bio'); if (bioEl) bioEl.style.display = u.bio ? 'block' : 'none';
@@ -1098,7 +1115,9 @@ function updateUserUI() {
   const clanRow = $('card-clan-row'); if (clanRow) clanRow.style.display = u.clan ? 'flex' : 'none';
 
   const reg = $('card-regdate');
-  if (reg) reg.textContent = `На Runa с ${parseDate(u.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+  const regText = `На Runa с ${parseDate(u.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+  if (reg) reg.textContent = regText;
+  text('card-passport-since', parseDate(u.createdAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' }));
 
   renderBadges($('card-badges-flex'), u.badges);
   renderBadges($('custom-badges-list'), u.badges);
@@ -1145,7 +1164,7 @@ function updateUserUI() {
 
   const profileWindow = document.querySelector('#modal-profile-card .profile-window');
   if (profileWindow) {
-    profileWindow.className = `profile-window style-${u.profileStyle || 'telegram'} bg-${u.profileBg || 'none'}`;
+    profileWindow.className = `profile-window nova-profile style-${u.profileStyle || 'telegram'} bg-${u.profileBg || 'none'}`;
   }
   const cardName = $('card-name');
   if (cardName) cardName.style.color = u.usernameColor || '';
@@ -1794,7 +1813,7 @@ async function openUserProfile(userId) {
     return;
   }
   try {
-    const user = await api(`/api/users/${encodeURIComponent(userId)}`);
+    const user = await api(`/api/users/${encodeURIComponent(userId)}?view=1`);
     showUserProfile(user);
   } catch (err) { toast(err.message, 'error'); }
 }
@@ -1818,6 +1837,16 @@ function showUserProfile(user) {
   $('up-online-dot').style.display = user.online ? 'block' : 'none';
   $('up-name').textContent = name;
   $('up-username').textContent = user.username || '';
+  const upStatusText = String(user.statusText || '').trim();
+  $('up-cover-username').textContent = user.username || 'user';
+  $('up-status').textContent = upStatusText;
+  $('up-status').style.display = upStatusText ? '' : 'none';
+  $('up-status-emoji').textContent = upStatusText ? (user.statusEmoji || '✦') : '';
+  $('up-status-emoji').style.display = upStatusText ? '' : 'none';
+  const upSince = user.createdAt
+    ? `На Runa с ${fmtDay(user.createdAt)}`
+    : 'Runa Identity';
+  $('up-since').textContent = upSince;
 
   const pills = [];
   if (user.online) {
@@ -1830,6 +1859,15 @@ function showUserProfile(user) {
   pills.push(`<span class="up-pill level"><i data-lucide="zap"></i>Уровень ${Number(user.level) || 1}</span>`);
   if (user.clan) pills.push(`<span class="up-pill"><i data-lucide="users"></i>[${escapeHtml(user.clan.tag || '')}] ${escapeHtml(user.clan.name || '')}</span>`);
   $('up-pills').innerHTML = pills.join('');
+  const statItems = [
+    ['Уровень', Number(user.level) || 1],
+    ['Просмотры', Number(user.profileViews) || 0],
+    ['Подарки', Number(user.giftsCount) || 0],
+    ['Рубины', Number(user.rubies) || 0]
+  ];
+  $('up-stats').innerHTML = statItems.map(([label, value]) =>
+    `<div class="up-stat"><strong>${Number(value).toLocaleString('ru-RU')}</strong><span>${label}</span></div>`
+  ).join('');
 
   $('up-bio').textContent = user.bio || '';
 
@@ -1854,7 +1892,7 @@ function showUserProfile(user) {
        <button class="mac-btn up-icon-btn" data-action="copy-text" data-text="${escapeAttr(user.username || '')}" title="Скопировать username"><i data-lucide="copy"></i></button>`;
 
   const upWindow = modal.querySelector('.up-window');
-  if (upWindow) upWindow.className = `up-window up-style-${user.profileStyle || 'telegram'}`;
+  if (upWindow) upWindow.className = `up-window nova-up up-style-${user.profileStyle || 'telegram'}`;
 
   modal.style.display = 'flex';
   if (window.lucide) lucide.createIcons();
@@ -2818,13 +2856,33 @@ function setupModalNavigation() {
     });
   }
 
+  const syncProfilePreview = () => {
+    const nameEl = $('edit-name-val');
+    const handleEl = $('edit-username-val');
+    const statusEl = $('edit-status-val');
+    const emojiEl = $('edit-status-emoji');
+    const previewName = $('edit-preview-name');
+    const previewHandle = $('edit-preview-handle');
+    const previewStatus = $('edit-preview-status-text');
+    const previewEmoji = $('edit-preview-status-emoji');
+    if (previewName && nameEl) previewName.textContent = nameEl.value.trim() || 'Без имени';
+    if (previewHandle && handleEl) previewHandle.textContent = `@${handleEl.value.trim() || 'username'}`;
+    if (previewStatus && statusEl) previewStatus.textContent = statusEl.value.trim() || 'Добавь статус';
+    if (previewEmoji && emojiEl) previewEmoji.textContent = emojiEl.value.trim() || '✦';
+  };
+  ['edit-name-val', 'edit-username-val', 'edit-status-val', 'edit-status-emoji'].forEach((id) => {
+    $(id)?.addEventListener('input', syncProfilePreview);
+  });
+
   $('btn-save-profile').addEventListener('click', async () => {
     try {
       const nextUsername = usernameInput ? usernameInput.value.trim().toLowerCase().replace(/^@/, '') : '';
       const body = {
         display_name: $('edit-name-val').value.trim(),
         bio: $('edit-bio-val').value.trim(),
-        city: $('edit-city-val').value.trim()
+        city: $('edit-city-val').value.trim(),
+        status_text: $('edit-status-val') ? $('edit-status-val').value.trim() : '',
+        status_emoji: $('edit-status-emoji') ? $('edit-status-emoji').value.trim() : ''
       };
       const usernameChanged = !!(currentUser && nextUsername && nextUsername !== currentUser.username);
       if (usernameChanged) body.username = nextUsername;

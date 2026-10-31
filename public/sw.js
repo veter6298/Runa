@@ -4,7 +4,7 @@
    - app shell (html/css/js/manifest): network-first с кэшем;
    - картинки/стикеры/вложения: cache-first;
    - API и Socket.IO: только сеть. */
-const VERSION = 'runa-v10';
+const VERSION = 'runa-v11';
 const SHELL_CACHE = `runa-shell-${VERSION}`;
 const MEDIA_CACHE = `runa-media-${VERSION}`;
 const OFFLINE_URL = '/offline.html';
@@ -14,6 +14,7 @@ const SHELL = [
   '/index.html',
   '/offline.html',
   '/style.css',
+  '/theme-nova.css',
   '/app.js',
   '/social.js',
   '/nft-phrases.js',

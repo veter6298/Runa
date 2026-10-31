@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
-  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#08070d" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#08070d">
+  <meta name="color-scheme" content="dark">
   <meta name="application-name" content="Runa">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
@@ -17,14 +17,15 @@
   <link rel="icon" href="/icons/favicon-16.png" sizes="16x16" type="image/png">
   <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" sizes="180x180">
-  <title>Runa / CookieChat</title>
+  <title>Runa — цифровая вселенная общения</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="theme-nova.css">
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="theme-runa-dark">
+<body class="theme-runa-dark theme-nova">
 
   <!-- ==================== ВХОД И РЕГИСТРАЦИЯ ==================== -->
   <div id="mac-activation-screen">
@@ -349,196 +350,273 @@
     </aside>
   </div>
 
-  <!-- ==================== КАРТОЧКА ПРОФИЛЯ (СКРИНШОТ 3) ==================== -->
-  <div class="modal-backdrop" id="modal-profile-card" style="display: none;">
-    <div class="profile-window">
-      <div class="window-nav-actions">
-        <button class="win-btn" id="btn-edit-profile-open"><i data-lucide="pen-line"></i></button>
-        <button class="win-btn close-btn" data-close="modal-profile-card"><i data-lucide="x"></i></button>
+  <!-- ==================== RUNA ID: ПРОФИЛЬ ==================== -->
+  <div class="modal-backdrop profile-backdrop" id="modal-profile-card" style="display: none;">
+    <div class="profile-window nova-profile">
+      <div class="profile-banner np-cover" id="card-banner">
+        <div class="np-cover-aurora"></div>
+        <div class="np-cover-grid"></div>
+        <div class="np-cover-top">
+          <span class="np-cover-kicker"><i data-lucide="orbit"></i> Runa ID</span>
+          <div class="window-nav-actions np-nav-actions">
+            <button class="win-btn np-icon-btn" id="btn-edit-profile-open" title="Настроить профиль"><i data-lucide="sparkles"></i></button>
+            <button class="win-btn np-icon-btn close-btn" data-close="modal-profile-card" title="Закрыть"><i data-lucide="x"></i></button>
+          </div>
+        </div>
+        <div class="np-cover-foot">
+          <span class="np-cover-handle">@<span id="card-cover-username">user</span></span>
+          <span class="np-cover-since" id="card-regdate">На Runa</span>
+        </div>
       </div>
 
-      <div class="profile-banner" id="card-banner"></div>
-      <div class="profile-card-content">
-        <div class="profile-avatar-giant" id="card-avatar">T</div>
-        <h2 class="profile-card-name" id="card-name">test</h2>
-        <p class="profile-bio-line" id="card-bio"></p>
-        <div class="profile-track" id="card-track" style="display: none;">
-        <button class="pt-btn" id="card-track-toggle">▶</button>
-        <div class="pt-info">
-        <div class="pt-title" id="card-track-title">Трек</div>
-  </div>
-  <button class="pt-clear" id="card-track-clear" title="Снять трек">✕</button>
+      <div class="np-body">
+        <div class="np-head">
+          <div class="np-avatar-wrap">
+            <div class="profile-avatar-giant" id="card-avatar">T</div>
+            <span class="np-online-dot" title="В сети"></span>
+          </div>
+          <div class="np-head-main">
+            <div class="np-name-line">
+              <h2 class="profile-card-name" id="card-name">test</h2>
+              <span class="np-status-emoji" id="card-status-emoji" aria-hidden="true"></span>
+            </div>
+            <p class="np-status" id="card-status"></p>
+            <div class="profile-identities np-identities" id="card-identities">
+              <button class="identity-chip main" id="card-identity-main" data-identity="username">
+                <span class="identity-at">@</span><span id="card-username">username</span>
+              </button>
+              <div class="identity-chips" id="card-nfts"></div>
+            </div>
+            <p class="profile-bio-line np-bio" id="card-bio"></p>
+          </div>
+          <div class="np-head-actions">
+            <span class="status-pill online">в сети</span>
+          </div>
+        </div>
+
+        <div class="np-metrics">
+          <div class="np-metric"><strong id="card-level">1</strong><span>Уровень</span></div>
+          <div class="np-metric"><strong id="card-profile-views">0</strong><span>Просмотры</span></div>
+          <div class="np-metric"><strong id="card-rubies">0</strong><span>Рубины</span></div>
+          <button class="np-metric np-metric-button" id="card-balance-pill">
+            <strong><i data-lucide="paw-print"></i> <span id="card-balance-num">0,00</span></strong><span>Баланс</span>
+          </button>
+        </div>
+
+        <div class="np-layout">
+          <div class="np-main-col">
+            <section class="np-panel np-about-panel">
+              <div class="np-panel-title"><span>О профиле</span><em>01</em></div>
+              <div class="profile-track" id="card-track" style="display: none;">
+                <button class="pt-btn" id="card-track-toggle">▶</button>
+                <div class="pt-info">
+                  <div class="pt-title" id="card-track-title">Трек</div>
+                  <div class="pt-sub">Музыка профиля</div>
+                </div>
+                <button class="pt-clear" id="card-track-clear" title="Снять трек">✕</button>
+              </div>
+
+              <div class="profile-detail-card np-details">
+                <div class="detail-row" id="card-city-row" style="display:none;">
+                  <div class="detail-icon-box green"><i data-lucide="map-pin"></i></div>
+                  <div class="detail-text-col">
+                    <span class="handle-val" id="card-city"></span>
+                    <span class="detail-sub">Место</span>
+                  </div>
+                </div>
+                <div class="detail-row" id="card-phone-row" style="display:none;">
+                  <div class="detail-icon-box orange"><i data-lucide="phone"></i></div>
+                  <div class="detail-text-col">
+                    <span class="handle-val" id="card-phone"></span>
+                    <span class="detail-sub">Номер</span>
+                  </div>
+                </div>
+                <div class="detail-row" id="card-clan-row" style="display:none;">
+                  <div class="detail-icon-box purple"><i data-lucide="shield"></i></div>
+                  <div class="detail-text-col">
+                    <span class="handle-val" id="card-clan"></span>
+                    <span class="detail-sub">Клан</span>
+                  </div>
+                </div>
+                <div class="detail-row np-detail-empty">
+                  <div class="detail-icon-box pink"><i data-lucide="sparkle"></i></div>
+                  <div class="detail-text-col">
+                    <span class="handle-val">Твой профиль — твоя витрина</span>
+                    <span class="detail-sub">Добавь статус, место и историю</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="profile-badges-row">
+                <span class="meta-label">Значки</span>
+                <div class="badges-flex" id="card-badges-flex"></div>
+              </div>
+            </section>
+
+            <section class="np-panel np-social-panel">
+              <div class="profile-social" id="self-profile-social">
+                <div class="profile-bottom-tabs" id="self-profile-tabs">
+                  <button class="profile-bottom-tab active" data-self-tab="stories">
+                    <i data-lucide="circle-play"></i><span>Истории</span><em id="self-tab-stories-count"></em>
+                  </button>
+                  <button class="profile-bottom-tab" data-self-tab="gifts">
+                    <i data-lucide="gift"></i><span>Подарки</span><em id="self-tab-gifts-count"></em>
+                  </button>
+                  <button class="profile-bottom-tab" data-self-tab="phrases">
+                    <i data-lucide="quote"></i><span>Фразы</span><em id="self-tab-phrases-count"></em>
+                  </button>
+                </div>
+                <div class="profile-social-panels">
+                  <div class="profile-social-panel" id="self-tab-stories">
+                    <div class="profile-social-loading"><span class="gifts-spinner"></span></div>
+                  </div>
+                  <div class="profile-social-panel" id="self-tab-gifts" hidden>
+                    <div class="profile-social-loading"><span class="gifts-spinner"></span></div>
+                  </div>
+                  <div class="profile-social-panel" id="self-tab-phrases" hidden>
+                    <div class="profile-social-loading"><span class="gifts-spinner"></span></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <aside class="np-side-col">
+            <section class="np-panel np-passport">
+              <div class="np-panel-title"><span>Цифровой паспорт</span><em>ID</em></div>
+              <div class="np-passport-row"><span>Handle</span><b>@<span id="card-passport-username">username</span></b></div>
+              <div class="np-passport-row"><span>Статус</span><b id="card-passport-status">—</b></div>
+              <div class="np-passport-row"><span>Локация</span><b id="card-passport-city">—</b></div>
+              <div class="np-passport-row"><span>На Runa</span><b id="card-passport-since">—</b></div>
+              <div class="np-passport-seal">
+                <i data-lucide="fingerprint"></i>
+                <span>Runa Identity<small>Verified profile layer</small></span>
+              </div>
+            </section>
+
+            <section class="np-panel np-vibe-panel">
+              <div class="np-panel-title"><span>Атмосфера</span><em>02</em></div>
+              <p class="np-vibe-copy">Runa ID собирает твои истории, подарки, фразы и коллекционные имена в одном месте.</p>
+              <div class="np-vibe-tags">
+                <span>#identity</span><span>#stories</span><span>#runa</span>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </div>
     </div>
-        
-        <div class="profile-status-badges">
-          <span class="level-badge" id="card-level">1</span>
-          <span class="status-pill online">в сети</span>
-        </div>
-
-        <button class="balance-tag-pill" id="card-balance-pill">
-          Баланс: <span class="mops-icon"><i data-lucide="paw-print"></i></span> <span id="card-balance-num">0,00</span>
-          <i data-lucide="chevron-right"></i>
-        </button>
-
-        <div class="profile-detail-card">
-          <div class="detail-row">
-            <div class="detail-icon-box pink"><i data-lucide="clock"></i></div>
-            <div class="detail-text-col">
-              <span class="reg-date" id="card-regdate">На Runa с 29 окт. 2026 г.</span>
-            </div>
-          </div>
-
-          <div class="detail-row" id="card-city-row" style="display:none;">
-            <div class="detail-icon-box green"><i data-lucide="map-pin"></i></div>
-            <div class="detail-text-col">
-              <span class="handle-val" id="card-city"></span>
-              <span class="detail-sub">Место</span>
-            </div>
-          </div>
-
-          <div class="detail-row" id="card-phone-row" style="display:none;">
-            <div class="detail-icon-box orange"><i data-lucide="phone"></i></div>
-            <div class="detail-text-col">
-              <span class="handle-val" id="card-phone"></span>
-              <span class="detail-sub">Номер</span>
-            </div>
-          </div>
-
-          <div class="detail-row" id="card-clan-row" style="display:none;">
-            <div class="detail-icon-box purple"><i data-lucide="shield"></i></div>
-            <div class="detail-text-col">
-              <span class="handle-val" id="card-clan"></span>
-              <span class="detail-sub">Клан</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="profile-badges-row">
-          <span class="meta-label">Значки</span>
-          <div class="badges-flex" id="card-badges-flex">
-            <span class="apple-badge l2">2</span>
-            <span class="apple-badge pum">🎃</span>
-            <span class="apple-badge ver">🛡️</span>
-          </div>
-        </div>
-
-        <div class="profile-identities" id="card-identities">
-          <button class="identity-chip main" id="card-identity-main" data-identity="username">
-            <span class="identity-at">@</span><span id="card-username">dfsadsa</span>
-          </button>
-          <div class="identity-chips" id="card-nfts"></div>
-        </div>
-
-        <div class="views-counter">
-          <i data-lucide="eye"></i>
-          <span>0</span>
-        </div>
-
-        <div class="profile-social" id="self-profile-social">
-          <div class="profile-social-panels">
-            <div class="profile-social-panel" id="self-tab-stories">
-              <div class="profile-social-loading"><span class="gifts-spinner"></span></div>
-            </div>
-            <div class="profile-social-panel" id="self-tab-gifts" hidden>
-              <div class="profile-social-loading"><span class="gifts-spinner"></span></div>
-            </div>
-            <div class="profile-social-panel" id="self-tab-phrases" hidden>
-              <div class="profile-social-loading"><span class="gifts-spinner"></span></div>
-            </div>
-          </div>
-          <div class="profile-bottom-tabs" id="self-profile-tabs">
-            <button class="profile-bottom-tab active" data-self-tab="stories">
-              <i data-lucide="circle-play"></i><span>Истории</span><em id="self-tab-stories-count"></em>
-            </button>
-            <button class="profile-bottom-tab" data-self-tab="gifts">
-              <i data-lucide="gift"></i><span>Подарки</span><em id="self-tab-gifts-count"></em>
-            </button>
-            <button class="profile-bottom-tab" data-self-tab="phrases">
-              <i data-lucide="quote"></i><span>Фразы</span><em id="self-tab-phrases-count"></em>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
-  <!-- ==================== РЕДАКТИРОВАНИЕ ПРОФИЛЯ (СКРИНШОТ 4) ==================== -->
-  <div class="modal-backdrop" id="modal-edit-profile" style="display: none;">
-    <div class="edit-profile-window">
-      <div class="window-nav-actions">
-        <button class="win-btn" id="btn-edit-profile-back"><i data-lucide="chevron-left"></i></button>
-        <button class="win-btn close-btn" data-close="modal-edit-profile"><i data-lucide="x"></i></button>
+  <!-- ==================== PROFILE STUDIO: РЕДАКТИРОВАНИЕ ==================== -->
+  <div class="modal-backdrop profile-backdrop" id="modal-edit-profile" style="display: none;">
+    <div class="edit-profile-window nova-edit">
+      <header class="ne-header">
+        <button class="win-btn np-icon-btn" id="btn-edit-profile-back" title="Назад"><i data-lucide="arrow-left"></i></button>
+        <div class="ne-header-copy">
+          <span>PROFILE STUDIO</span>
+          <h2>Настрой свой Runa ID</h2>
+        </div>
+        <button class="win-btn np-icon-btn close-btn" data-close="modal-edit-profile" title="Закрыть"><i data-lucide="x"></i></button>
+      </header>
+
+      <div class="ne-body">
+        <aside class="ne-preview-panel">
+          <div class="ne-preview-card">
+            <div class="ne-preview-cover">
+              <span class="np-cover-kicker"><i data-lucide="orbit"></i> LIVE PREVIEW</span>
+            </div>
+            <div class="profile-avatar-giant" id="edit-avatar-preview">T</div>
+            <button class="camera-badge-btn" id="btn-avatar-upload" title="Загрузить аватар"><i data-lucide="camera"></i></button>
+            <input type="file" id="avatar-file-input" accept="image/*" style="display:none;">
+            <h3 id="edit-preview-name">test</h3>
+            <span class="ne-preview-handle" id="edit-preview-handle">@username</span>
+            <p class="ne-preview-status"><span id="edit-preview-status-emoji">✦</span><span id="edit-preview-status-text">Добавь статус</span></p>
+            <div class="ne-preview-seal"><i data-lucide="badge-check"></i> Runa Identity</div>
+          </div>
+          <p class="ne-preview-hint">Так тебя увидят в чатах, комментариях и на странице Runa ID.</p>
+        </aside>
+
+        <div class="edit-profile-scrollable ne-form">
+          <section class="ne-section">
+            <div class="ne-section-head"><span>01</span><h3>Идентичность</h3><p>Имя, адрес и то, что ты хочешь сказать миру.</p></div>
+            <div class="edit-fields-card ne-fields-card">
+              <div class="form-row">
+                <label for="edit-name-val">Имя</label>
+                <input type="text" id="edit-name-val" value="test" maxlength="40">
+              </div>
+              <div class="form-row">
+                <label for="edit-username-val">Юзернейм</label>
+                <div class="username-input-row" id="edit-username-row">
+                  <span class="static-prefix">@</span>
+                  <input type="text" id="edit-username-val" value="username" maxlength="32"
+                         autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="username">
+                  <span class="username-status" id="edit-username-status"></span>
+                </div>
+                <span class="field-hint" id="edit-username-hint">3–32 символа: латиница, цифры и _</span>
+              </div>
+              <div class="form-row">
+                <label for="edit-bio-val">Описание</label>
+                <div class="with-emoji-btn">
+                  <input type="text" id="edit-bio-val" placeholder="Пара слов о себе" maxlength="160">
+                  <i data-lucide="face-slightly-smiling"></i>
+                </div>
+              </div>
+              <div class="form-row">
+                <label for="edit-status-val">Статус</label>
+                <div class="ne-status-row">
+                  <input type="text" id="edit-status-emoji" maxlength="4" placeholder="✦" aria-label="Эмодзи статуса">
+                  <input type="text" id="edit-status-val" maxlength="80" placeholder="Чем ты занят?">
+                </div>
+              </div>
+              <div class="form-row">
+                <label for="edit-city-val">Место</label>
+                <input type="text" id="edit-city-val" placeholder="Город или страна" maxlength="60">
+              </div>
+            </div>
+          </section>
+
+          <section class="ne-section">
+            <div class="ne-section-head"><span>02</span><h3>Коллекция и медиа</h3><p>Музыка, имена и всё, что делает профиль живым.</p></div>
+            <div class="edit-fields-card ne-fields-card">
+              <div class="form-row">
+                <label>Музыка в профиле</label>
+                <div class="track-edit-row">
+                  <span id="edit-track-name" class="ne-track-name">Не выбрано</span>
+                  <button class="mac-btn secondary" id="btn-upload-profile-track"><i data-lucide="upload"></i> Загрузить</button>
+                  <button class="mac-btn secondary" id="btn-clear-profile-track" title="Удалить трек"><i data-lucide="trash"></i></button>
+                </div>
+              </div>
+              <input type="file" id="profile-track-input" accept="audio/*" style="display: none;">
+              <div class="form-row">
+                <label>NFT юзернеймы</label>
+                <div class="edit-nfts-list" id="edit-nfts-list"></div>
+              </div>
+              <div class="form-row">
+                <label>Анонимный номер</label>
+                <div class="anon-number-row" id="anon-number-row"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="ne-section">
+            <div class="ne-section-head"><span>03</span><h3>Оформление</h3><p>Цвета, фон, рамки и стиль карточки.</p></div>
+            <button class="customization-nav-card ne-customization-card" id="btn-open-customization">
+              <div class="custom-card-icon green"><i data-lucide="palette"></i></div>
+              <div class="ne-custom-copy"><span>Кастомизация профиля</span><small>Фон, рамка аватара, акценты</small></div>
+              <i data-lucide="chevron-right" class="nav-arrow"></i>
+            </button>
+          </section>
+        </div>
       </div>
 
-      <div class="edit-profile-scrollable">
-        <div class="avatar-uploader-center">
-          <div class="profile-avatar-giant" id="edit-avatar-preview">T</div>
-          <button class="camera-badge-btn" id="btn-avatar-upload" title="Загрузить аватар"><i data-lucide="camera"></i></button>
-          <input type="file" id="avatar-file-input" accept="image/*" style="display:none;">
-        </div>
-
-        <h3 class="section-title-label">Профиль</h3>
-        <div class="edit-fields-card">
-          <div class="form-row">
-            <label>Имя</label>
-            <input type="text" id="edit-name-val" value="test">
-          </div>
-          <div class="form-row">
-            <label>Юзернейм</label>
-            <div class="username-input-row" id="edit-username-row">
-              <span class="static-prefix">@</span>
-              <input type="text" id="edit-username-val" value="dfsadsa" maxlength="32"
-                     autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="username">
-              <span class="username-status" id="edit-username-status"></span>
-            </div>
-            <span class="field-hint" id="edit-username-hint">3–32 символа: латиница, цифры и _</span>
-          </div>
-          <div class="form-row">
-            <label>Описание</label>
-            <div class="with-emoji-btn">
-              <input type="text" id="edit-bio-val" placeholder="Пара слов о себе">
-              <i data-lucide="face-slightly-smiling"></i>
-            </div>
-          </div>
-          <div class="form-row">
-            <label>Место</label>
-            <input type="text" id="edit-city-val" placeholder="Город или страна">
-          </div>
-          <div class="form-row">
-  <label>Музыка в профиле</label>
-  <div class="track-edit-row">
-    <span id="edit-track-name" style="opacity:.7;font-size:13px;">Не выбрано</span>
-    <button class="mac-btn secondary" id="btn-upload-profile-track"><i data-lucide="upload"></i> Загрузить</button>
-    <button class="mac-btn secondary" id="btn-clear-profile-track"><i data-lucide="trash"></i></button>
-  </div>
-          </div>
-          <input type="file" id="profile-track-input" accept="audio/*" style="display: none;">
-          <div class="form-row">
-            <label>NFT юзернеймы</label>
-            <div class="edit-nfts-list" id="edit-nfts-list"></div>
-          </div>
-          <div class="form-row">
-            <label>Анонимный номер</label>
-            <div class="anon-number-row" id="anon-number-row"></div>
-          </div>
-        </div>
-
-        <h3 class="section-title-label">Оформление</h3>
-        <button class="customization-nav-card" id="btn-open-customization">
-          <div class="custom-card-icon green"><i data-lucide="palette"></i></div>
-          <span class="custom-card-title">Кастомизация</span>
-          <i data-lucide="chevron-right" class="nav-arrow"></i>
+      <footer class="edit-buttons-dock ne-dock">
+        <button class="dock-btn cancel" data-close="modal-edit-profile">
+          <i data-lucide="circle-x"></i> Отмена
         </button>
-
-        <div class="edit-buttons-dock">
-          <button class="dock-btn cancel" data-close="modal-edit-profile">
-            <i data-lucide="circle-x"></i> Отмена
-          </button>
-          <button class="dock-btn save" id="btn-save-profile">
-            <i data-lucide="circle-check-big"></i> Сохранить
-          </button>
-        </div>
-      </div>
+        <button class="dock-btn save" id="btn-save-profile">
+          <i data-lucide="circle-check-big"></i> Сохранить Runa ID
+        </button>
+      </footer>
     </div>
   </div>
 
@@ -1183,48 +1261,65 @@
     <img id="lightbox-img" alt="">
   </div>
 
-  <!-- ==================== КРАСИВЫЙ ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ ==================== -->
-  <div class="modal-backdrop" id="modal-user-profile" style="display: none;">
-    <div class="up-window">
-      <button class="up-close" data-close="modal-user-profile" title="Закрыть"><i data-lucide="x"></i></button>
-      <div class="up-banner" id="up-banner">
+  <!-- ==================== RUNA ID: ПУБЛИЧНЫЙ ПРОФИЛЬ ==================== -->
+  <div class="modal-backdrop profile-backdrop" id="modal-user-profile" style="display: none;">
+    <div class="up-window nova-up">
+      <button class="up-close np-icon-btn" data-close="modal-user-profile" title="Закрыть"><i data-lucide="x"></i></button>
+
+      <div class="up-banner np-cover" id="up-banner">
+        <div class="np-cover-aurora"></div>
+        <div class="np-cover-grid"></div>
         <div class="up-banner-fade"></div>
+        <div class="np-cover-top">
+          <span class="np-cover-kicker"><i data-lucide="scan-face"></i> Runa ID</span>
+        </div>
+        <div class="np-cover-foot">
+          <span class="np-cover-handle">@<span id="up-cover-username">user</span></span>
+          <span class="np-cover-since" id="up-since"></span>
+        </div>
       </div>
-      <div class="up-body">
-        <div class="up-avatar-wrap">
-          <div class="up-avatar" id="up-avatar"></div>
-          <span class="up-online-dot" id="up-online-dot" title="В сети"></span>
-        </div>
-        <div class="up-headline">
-          <h2 id="up-name">Пользователь</h2>
-          <div class="profile-identities up-identities">
-            <button class="identity-chip main" id="up-identity-main" data-identity="username">
-              <span class="identity-at">@</span><span id="up-username">user</span>
-            </button>
-            <button class="up-copy" id="up-copy" title="Скопировать username"><i data-lucide="copy"></i></button>
-            <div class="identity-chips" id="up-nft"></div>
+
+      <div class="up-body np-public-body">
+        <div class="np-head np-public-head">
+          <div class="up-avatar-wrap np-avatar-wrap">
+            <div class="up-avatar" id="up-avatar"></div>
+            <span class="up-online-dot" id="up-online-dot" title="В сети"></span>
+          </div>
+          <div class="np-head-main">
+            <div class="np-name-line">
+              <h2 id="up-name">Пользователь</h2>
+              <span class="np-status-emoji" id="up-status-emoji" aria-hidden="true"></span>
+            </div>
+            <p class="np-status" id="up-status"></p>
+            <div class="profile-identities up-identities np-identities">
+              <button class="identity-chip main" id="up-identity-main" data-identity="username">
+                <span class="identity-at">@</span><span id="up-username">user</span>
+              </button>
+              <button class="up-copy" id="up-copy" title="Скопировать username"><i data-lucide="copy"></i></button>
+              <div class="identity-chips" id="up-nft"></div>
+            </div>
+            <div class="up-pills" id="up-pills"></div>
           </div>
         </div>
-        <div class="up-pills" id="up-pills"></div>
-        <p class="up-bio" id="up-bio"></p>
-        <div class="up-badges" id="up-badges"></div>
-        <div class="up-meta" id="up-meta"></div>
-        <div class="up-actions" id="up-actions"></div>
+
+        <div class="up-stats" id="up-stats"></div>
+
+        <div class="np-public-grid">
+          <div class="np-public-main">
+            <p class="up-bio" id="up-bio"></p>
+            <div class="up-badges" id="up-badges"></div>
+            <div class="up-meta" id="up-meta"></div>
+          </div>
+          <aside class="np-public-side">
+            <div class="np-panel np-public-action-panel">
+              <div class="np-panel-title"><span>Действия</span><em>ID</em></div>
+              <div class="up-actions" id="up-actions"></div>
+              <p class="np-public-note"><i data-lucide="shield-check"></i> Профиль защищён Runa Identity</p>
+            </div>
+          </aside>
+        </div>
+
         <div class="profile-social up-social" id="up-profile-social">
-          <div class="profile-social-panels">
-            <div class="profile-social-panel" id="up-tab-stories">
-              <div class="profile-social-loading"><span class="gifts-spinner"></span></div>
-            </div>
-            <div class="profile-social-panel" id="up-tab-gifts" hidden>
-              <div class="profile-social-loading"><span class="gifts-spinner"></span></div>
-            </div>
-        <div class="profile-social-panel" id="up-tab-channels" hidden>
-          <div class="profile-social-loading"><span class="gifts-spinner"></span></div>
-        </div>
-            <div class="profile-social-panel" id="up-tab-phrases" hidden>
-              <div class="profile-social-loading"><span class="gifts-spinner"></span></div>
-            </div>
-          </div>
           <div class="profile-bottom-tabs" id="up-profile-tabs">
             <button class="profile-bottom-tab active" data-up-tab="stories">
               <i data-lucide="circle-play"></i><span>Истории</span><em id="up-tab-stories-count"></em>
@@ -1232,10 +1327,26 @@
             <button class="profile-bottom-tab" data-up-tab="gifts">
               <i data-lucide="gift"></i><span>Подарки</span><em id="up-tab-gifts-count"></em>
             </button>
-            <button class="profile-bottom-tab" data-up-tab="channels"><i data-lucide="tv"></i><span>Каналы</span><em id="up-tab-channels-count"></em></button>
+            <button class="profile-bottom-tab" data-up-tab="channels">
+              <i data-lucide="tv"></i><span>Каналы</span><em id="up-tab-channels-count"></em>
+            </button>
             <button class="profile-bottom-tab" data-up-tab="phrases">
               <i data-lucide="quote"></i><span>Фразы</span><em id="up-tab-phrases-count"></em>
             </button>
+          </div>
+          <div class="profile-social-panels">
+            <div class="profile-social-panel" id="up-tab-stories">
+              <div class="profile-social-loading"><span class="gifts-spinner"></span></div>
+            </div>
+            <div class="profile-social-panel" id="up-tab-gifts" hidden>
+              <div class="profile-social-loading"><span class="gifts-spinner"></span></div>
+            </div>
+            <div class="profile-social-panel" id="up-tab-channels" hidden>
+              <div class="profile-social-loading"><span class="gifts-spinner"></span></div>
+            </div>
+            <div class="profile-social-panel" id="up-tab-phrases" hidden>
+              <div class="profile-social-loading"><span class="gifts-spinner"></span></div>
+            </div>
           </div>
         </div>
       </div>

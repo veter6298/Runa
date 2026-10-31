@@ -169,6 +169,9 @@ ensureColumn('users', 'is_premium', 'INTEGER DEFAULT 0');
 ensureColumn('users', 'level', 'INTEGER DEFAULT 1');
 ensureColumn('users', 'profile_style', "TEXT DEFAULT 'telegram'");
 ensureColumn('users', 'city', "TEXT DEFAULT ''");
+ensureColumn('users', 'status_text', "TEXT DEFAULT ''");
+ensureColumn('users', 'status_emoji', "TEXT DEFAULT ''");
+ensureColumn('users', 'profile_views', 'INTEGER DEFAULT 0');
 ensureColumn('users', 'banned', 'INTEGER DEFAULT 0');
 ensureColumn('users', 'banner', "TEXT DEFAULT ''");
 ensureColumn('users', 'avatar_frame', "TEXT DEFAULT ''");
@@ -360,7 +363,8 @@ function requireAdmin(req, res, next) {
 
 const publicUser = (u) => u ? {
   id: u.id, username: u.username, displayName: u.display_name || u.username,
-  avatar: u.avatar || '', isAdmin: !!u.is_admin, isPremium: !!u.is_premium,
+  avatar: u.avatar || '', statusText: u.status_text || '', statusEmoji: u.status_emoji || '',
+  isAdmin: !!u.is_admin, isPremium: !!u.is_premium,
   level: u.level || 1, banned: !!u.banned, online: isOnline(u.id), lastSeen: u.last_seen || null
 } : null;
 
@@ -426,6 +430,8 @@ function fullProfile(row, includePrivate = false) {
   const profile = {
     id: row.id, username: row.username, displayName: row.display_name || row.username,
     bio: row.bio || '', city: row.city || '', avatar: row.avatar || '',
+    statusText: row.status_text || '', statusEmoji: row.status_emoji || '',
+    profileViews: row.profile_views || 0,
     banner: row.banner || '', avatarFrame: row.avatar_frame || '',
     profileBg: row.profile_bg || '', usernameColor: row.username_color || '',
     accentColor: row.accent_color || '',
@@ -993,11 +999,16 @@ app.get('/api/users/:identifier', requireAuth, (req, res) => {
     if (nft) row = db.prepare('SELECT * FROM users WHERE id = ?').get(nft.user_id);
   }
   if (!row) return res.status(404).json({ error: 'Пользователь не найден' });
+  if (req.query.view === '1' && row.id !== req.user.id) {
+    db.prepare('UPDATE users SET profile_views = COALESCE(profile_views, 0) + 1 WHERE id = ?').run(row.id);
+    row = db.prepare('SELECT * FROM users WHERE id = ?').get(row.id);
+  }
   res.json(fullProfile(row, row.id === req.user.id));
 });
 
 const SELF_FIELDS = {
   display_name: 'display_name', bio: 'bio', city: 'city', profile_style: 'profile_style',
+  status_text: 'status_text', status_emoji: 'status_emoji',
   banner: 'banner', avatar_frame: 'avatar_frame', profile_bg: 'profile_bg',
   username_color: 'username_color', accent_color: 'accent_color', theme: 'theme',
   language: 'language', font_size: 'font_size', ui_scale: 'ui_scale',
@@ -2091,7 +2102,7 @@ app.patch('/api/admin/users/:id', requireAdmin, (req, res) => {
   const sets = []; const vals = [];
   const map = {
     display_name: 'display_name', bio: 'bio', city: 'city', phone_number: 'phone_number',
-    level: 'level', profile_style: 'profile_style'
+    level: 'level', profile_style: 'profile_style', status_text: 'status_text', status_emoji: 'status_emoji'
   };
   for (const [k, col] of Object.entries(map)) {
     if (req.body[k] !== undefined) { sets.push(`${col} = ?`); vals.push(req.body[k]); }
