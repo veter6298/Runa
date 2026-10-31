@@ -412,7 +412,7 @@ function setupStoryCreate() {
     const btn = $('story-publish-btn');
     btn.disabled = true;
     btn.classList.add('loading');
-    btn.innerHTML = '<i data-lucide="loader-2"></i> Публикуем…';
+    btn.innerHTML = '<i data-lucide="loader-circle"></i> Публикуем…';
     soIcons();
     try {
       const fd = new FormData();

@@ -444,12 +444,12 @@ function installHelpHtml() {
   const steps = ios
     ? [
         ['<i data-lucide="share"></i>', 'Нажмите «Поделиться»', 'Кнопка в нижней панели Safari.'],
-        ['<i data-lucide="plus-square"></i>', 'Выберите «На экран Домой»', 'Прокрутите меню немного вниз.'],
+        ['<i data-lucide="square-plus"></i>', 'Выберите «На экран Домой»', 'Прокрутите меню немного вниз.'],
         ['<i data-lucide="check"></i>', 'Готово', 'Runa появится на экране как обычное приложение.']
       ]
     : android
       ? [
-          ['<i data-lucide="more-vertical"></i>', 'Откройте меню браузера', 'Три точки в правом верхнем углу Chrome.'],
+          ['<i data-lucide="ellipsis-vertical"></i>', 'Откройте меню браузера', 'Три точки в правом верхнем углу Chrome.'],
           ['<i data-lucide="download"></i>', 'Выберите «Установить приложение»', 'Или «Добавить на главный экран».'],
           ['<i data-lucide="check"></i>', 'Подтвердите установку', 'Runa откроется в отдельном окне.']
         ]
@@ -484,7 +484,7 @@ async function promptInstall() {
     openList('Runa установлена', `<div class="install-help"><div class="install-hero">
       <img src="/icons/icon-192.png" alt="Runa" class="install-hero-icon">
       <div><h3>Всё готово</h3><p>Вы уже пользуетесь установленной Runa. Приятного общения!</p></div>
-    </div><p class="install-note"><i data-lucide="check-circle"></i> Приложение запускается без адресной строки и работает офлайн.</p></div>`);
+    </div><p class="install-note"><i data-lucide="circle-check-big"></i> Приложение запускается без адресной строки и работает офлайн.</p></div>`);
     if (window.lucide) lucide.createIcons();
     return;
   }
@@ -794,6 +794,17 @@ function setupActivation() {
       submitBtn.classList.add('loading');
       showError('');
       const data = await api(endpoint, { method: 'POST', body: payload });
+      if (data && data.secondPasswordRequired) {
+        pending2faUserId = data.userId;
+        const modal = $('modal-2fa-login');
+        const input = $('2fa-login-input');
+        const error = $('2fa-login-error');
+        if (modal) openAnimated(modal, 'flex');
+        if (input) { input.value = ''; setTimeout(() => input.focus(), 80); }
+        if (error) error.style.display = 'none';
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
       token = data.token;
       localStorage.setItem(TOKEN_KEY, token);
       startMainApp(data.user);
@@ -1534,9 +1545,9 @@ function appendMessage(msg, scroll = true) {
     <span class="msg-time">${fmtTime(msg.created_at)}</span>${msg.edited_at ? '<span class="msg-edited">изм.</span>' : ''}
     ${isMe ? '<span class="msg-ticks" title="Доставлено"><svg viewBox="0 0 16 10" aria-hidden="true"><path d="M1 5.2 3.4 7.6 9 2M6.4 7.6 8.8 10 15 3.8"/></svg></span>' : ''}
     <span class="msg-actions">
-      <button class="msg-react" title="Поставить реакцию"><i data-lucide="smile-plus"></i></button>
+      <button class="msg-react" title="Поставить реакцию"><i data-lucide="face-slightly-smiling-plus"></i></button>
       <button class="msg-reply" title="Ответить"><i data-lucide="reply"></i></button>
-      ${canDelete ? '<button class="msg-del" title="Удалить"><i data-lucide="trash-2"></i></button>' : ''}
+      ${canDelete ? '<button class="msg-del" title="Удалить"><i data-lucide="trash"></i></button>' : ''}
     </span>
   </div>`;
 
@@ -1923,7 +1934,7 @@ function renderChatSettings() {
       <span>Ссылка</span>
     </button>
     <button class="cs-quick danger" data-cs-action="${d.canManage ? 'delete-chat' : 'leave-chat'}">
-      <i data-lucide="${d.canManage ? 'trash-2' : 'log-out'}"></i>
+      <i data-lucide="${d.canManage ? 'trash' : 'log-out'}"></i>
       <span>${d.canManage ? 'Удалить' : 'Выйти'}</span>
     </button>
   </div>`;
@@ -1983,7 +1994,7 @@ function renderChatSettings() {
       <div class="cs-section-title">${d.canManage ? 'Удалить чат' : 'Покинуть чат'}</div>
       <p class="cs-danger-text">${d.canManage ? 'Чат и все сообщения будут удалены для всех участников.' : 'Вы больше не будете получать сообщения из этого чата.'}</p>
       <button class="cs-danger-btn" data-cs-action="${d.canManage ? 'delete-chat' : 'leave-chat'}">
-        <i data-lucide="${d.canManage ? 'trash-2' : 'log-out'}"></i> ${d.canManage ? 'Удалить чат' : 'Покинуть чат'}
+        <i data-lucide="${d.canManage ? 'trash' : 'log-out'}"></i> ${d.canManage ? 'Удалить чат' : 'Покинуть чат'}
       </button>
     </div>`;
   }
@@ -2336,6 +2347,7 @@ function setupWorkspace() {
     void sendBtn.offsetWidth;
     sendBtn.classList.add('sending');
     composer.value = '';
+    localStorage.removeItem('draft_' + currentChat.id);
     composer.style.height = 'auto';
     socket.emit('stop_typing', { chatId: currentChat.id });
     clearReplyBar();
@@ -3866,7 +3878,7 @@ function renderSettingsPane() {
         <label class="radio-row locked"><span>Только Premium</span><i data-lucide="lock"></i></label>
         <label class="radio-row locked"><span>За рубины</span><i data-lucide="lock"></i></label>
       </div>
-      <button class="set-danger-btn" data-act="delete-account"><i data-lucide="trash-2"></i> Удалить аккаунт</button>`;
+      <button class="set-danger-btn" data-act="delete-account"><i data-lucide="trash"></i> Удалить аккаунт</button>`;
   } else if (key === 'devices') {
     const { browser, os } = detectBrowser();
     body = `
@@ -3967,7 +3979,7 @@ function renderSettingsPane() {
         <div class="set-row"><span class="set-row-icon" style="background:rgba(255,255,255,.07)"><i data-lucide="database"></i></span><div class="set-row-main"><b>Кэш приложения</b><small id="mem-size">Считаем…</small></div></div>
         <div class="set-row"><span class="set-row-icon" style="background:rgba(255,255,255,.07)"><i data-lucide="hard-drive"></i></span><div class="set-row-main"><b>Медиа и стикеры</b><small>Хранятся локально для офлайна</small></div></div>
       </div>
-      <button class="set-primary-btn" data-act="clear-cache"><i data-lucide="trash-2"></i> Очистить кэш</button>`;
+      <button class="set-primary-btn" data-act="clear-cache"><i data-lucide="trash"></i> Очистить кэш</button>`;
   } else if (key === 'info') {
     body = `<div class="set-card">
         <div class="set-row"><span class="set-row-icon" style="background:linear-gradient(150deg,#3FA2FF,#0A6FE8);color:#fff"><i data-lucide="cookie"></i></span><div class="set-row-main"><b>Runa</b><small>Версия 2.0.0 · Liquid Glass</small></div></div>
@@ -4285,7 +4297,7 @@ async function openIdentitySheet(chip) {
 
     statusEl.innerHTML = forSale
       ? `<span class="identity-status-pill sale"><span class="identity-status-dot"></span>На продаже · ${Number(price).toLocaleString('ru-RU')} 💎</span>`
-      : `<span class="identity-status-pill owned"><i data-lucide="check-circle-2"></i>В коллекции</span>`;
+      : `<span class="identity-status-pill owned"><i data-lucide="circle-check"></i>В коллекции</span>`;
 
     if (owner) {
       ownerEl.innerHTML = `<div class="identity-owner-card">
@@ -4332,7 +4344,7 @@ async function openIdentitySheet(chip) {
     actionsEl.innerHTML = [
       identityActionBtn('copy', 'Скопировать номер', 'copy'),
       identityActionBtn('call', 'Позвонить', 'phone'),
-      ownNumber ? identityActionBtn('remove-anon', 'Удалить номер', 'trash-2', 'danger') : ''
+      ownNumber ? identityActionBtn('remove-anon', 'Удалить номер', 'trash', 'danger') : ''
     ].join('');
     identitySheetData = { kind, number, mine: ownNumber };
   } else {
@@ -4344,7 +4356,7 @@ async function openIdentitySheet(chip) {
     noteEl.textContent = 'Основной адрес профиля. По нему вас находят в поиске.';
     mine = !!(currentUser && currentUser.username === handle);
     statusEl.innerHTML = mine
-      ? '<span class="identity-status-pill owned"><i data-lucide="check-circle-2"></i>Ваш юзернейм</span>'
+      ? '<span class="identity-status-pill owned"><i data-lucide="circle-check"></i>Ваш юзернейм</span>'
       : '<span class="identity-status-pill neutral"><i data-lucide="at-sign"></i>Основной адрес</span>';
     factsEl.innerHTML = `<div class="identity-fact"><span>Адрес</span><b>@${escapeHtml(handle)}</b></div>`;
     actionsEl.innerHTML = [
@@ -5089,9 +5101,9 @@ function openMessageActionsSheet(bubble) {
   back.innerHTML = `<div class="msg-sheet" role="dialog" aria-label="Действия с сообщением">
     <div class="msg-sheet-preview">${escapeHtml(messagePreviewText(msg) || 'Сообщение').slice(0, 120)}</div>
     <button type="button" data-sheet-action="reply"><i data-lucide="reply"></i><span>Ответить</span></button>
-    <button type="button" data-sheet-action="react"><i data-lucide="smile-plus"></i><span>Реакция</span></button>
+    <button type="button" data-sheet-action="react"><i data-lucide="face-slightly-smiling-plus"></i><span>Реакция</span></button>
     ${msg.text ? '<button type="button" data-sheet-action="copy"><i data-lucide="copy"></i><span>Скопировать текст</span></button>' : ''}
-    ${canDelete ? '<button type="button" class="danger" data-sheet-action="delete"><i data-lucide="trash-2"></i><span>Удалить</span></button>' : ''}
+    ${canDelete ? '<button type="button" class="danger" data-sheet-action="delete"><i data-lucide="trash"></i><span>Удалить</span></button>' : ''}
     <button type="button" class="cancel" data-sheet-action="cancel">Отмена</button>
   </div>`;
   document.body.appendChild(back);
@@ -5222,7 +5234,7 @@ function openPack(pack) {
           <div style="font-size:9px;opacity:.5;overflow:hidden;text-overflow:ellipsis;">${e.name}</div>
         </div>`).join('')
     : '<p class="empty-feed">Пак пуст. Загрузите эмодзи.</p>';
-  document.getElementById('modal-emoji-pack').style.display = 'block';
+  openAnimated(document.getElementById('modal-emoji-pack'), 'flex');
 }
 
 async function renderEmojiPicker() {
@@ -5257,7 +5269,7 @@ async function renderEmojiPicker() {
 }
 
 document.getElementById('nav-emojis')?.addEventListener('click', async () => {
-  document.getElementById('modal-emoji-packs').style.display = 'block';
+  openAnimated(document.getElementById('modal-emoji-packs'), 'flex');
   await loadMyPacks();
 });
 
@@ -5267,7 +5279,7 @@ document.getElementById('btn-create-emoji-pack')?.addEventListener('click', () =
     alert('Создавать паки эмодзи может только Runa Premium');
     return;
   }
-  document.getElementById('modal-create-emoji-pack').style.display = 'block';
+  openAnimated(document.getElementById('modal-create-emoji-pack'), 'flex');
 });
 
 document.getElementById('btn-create-pack-submit')?.addEventListener('click', async () => {
@@ -5396,75 +5408,91 @@ async function render2faPanel() {
       else alert(r.error || 'Ошибка');
     });
   }
+  if (window.lucide) lucide.createIcons();
 }
 
 document.querySelector('[data-setting="2fa"]')?.addEventListener('click', () => {
-  document.getElementById('modal-2fa').style.display = 'block';
+  const modal = document.getElementById('modal-2fa');
+  if (modal) openAnimated(modal, 'flex');
   render2faPanel();
 });
 
 document.getElementById('btn-2fa-login-submit')?.addEventListener('click', async () => {
-  const pwd = document.getElementById('2fa-login-input').value;
+  const input = document.getElementById('2fa-login-input');
   const err = document.getElementById('2fa-login-error');
-  err.style.display = 'none';
+  const pwd = input ? input.value : '';
+  if (err) err.style.display = 'none';
+  if (!pending2faUserId) {
+    if (err) { err.textContent = 'Сессия входа истекла, попробуйте снова'; err.style.display = 'block'; }
+    return;
+  }
   const r = await fetch('/api/auth/login/2fa', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId: pending2faUserId, password: pwd })
   }).then(r => r.json());
   if (r.token) {
-    localStorage.setItem('token', r.token);
+    localStorage.setItem(TOKEN_KEY, r.token);
     location.reload();
   } else {
-    err.textContent = r.error || 'Ошибка';
-    err.style.display = 'block';
+    if (err) {
+      err.textContent = r.error || 'Ошибка';
+      err.style.display = 'block';
+    }
   }
 });
 
-// Контекстное меню (долгое нажатие)
-let longPressTimer;
+document.getElementById('2fa-login-input')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('btn-2fa-login-submit')?.click();
+});
+
+// Контекстное меню сообщения (ПКМ на десктопе)
 let currentContextMsg = null;
 
-function setupContextMenu(bubble, msg) {
-  if (!bubble) return;
-  const startPress = (e) => {
-    longPressTimer = setTimeout(() => {
-      currentContextMsg = msg;
-      const menu = document.getElementById('msg-context-menu');
-      if (menu) menu.classList.add('active');
-      if (navigator.vibrate) navigator.vibrate(50);
-    }, 500);
+function setupMessageContextMenu() {
+  const stream = $('chat-messages-stream');
+  const menu = $('msg-context-menu');
+  if (!stream || !menu) return;
+  const hide = () => {
+    menu.style.display = 'none';
+    menu.classList.remove('active');
+    currentContextMsg = null;
   };
-  const cancelPress = () => clearTimeout(longPressTimer);
-  bubble.addEventListener('mousedown', startPress);
-  bubble.addEventListener('touchstart', startPress);
-  bubble.addEventListener('mouseup', cancelPress);
-  bubble.addEventListener('mouseleave', cancelPress);
-  bubble.addEventListener('touchend', cancelPress);
+  stream.addEventListener('contextmenu', (e) => {
+    const bubble = e.target.closest('.bubble');
+    if (!bubble) return;
+    const msg = messageCache.get(bubble.dataset.id);
+    if (!msg) return;
+    e.preventDefault();
+    currentContextMsg = msg;
+    menu.style.display = 'flex';
+    menu.classList.add('active');
+    const rect = menu.getBoundingClientRect();
+    const x = Math.max(8, Math.min(e.clientX, window.innerWidth - rect.width - 8));
+    const y = Math.max(8, Math.min(e.clientY, window.innerHeight - rect.height - 8));
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
+    menu.style.right = 'auto';
+    menu.style.bottom = 'auto';
+  });
+  $('ctx-reply-btn')?.addEventListener('click', () => {
+    if (currentContextMsg) startReply(currentContextMsg);
+    hide();
+  });
+  $('ctx-forward-btn')?.addEventListener('click', () => {
+    hide();
+    toast('Пересылка пока не реализована', 'error');
+  });
+  document.addEventListener('click', (e) => {
+    if (!menu.contains(e.target)) hide();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') hide();
+  });
+  window.addEventListener('resize', hide);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const replyBtn = document.getElementById('ctx-reply-btn');
-  if (replyBtn) {
-    replyBtn.addEventListener('click', () => {
-      if (currentContextMsg && typeof setReplyTarget === 'function') {
-        setReplyTarget(currentContextMsg);
-      }
-      document.getElementById('msg-context-menu').classList.remove('active');
-    });
-  }
-  const forwardBtn = document.getElementById('ctx-forward-btn');
-  if (forwardBtn) {
-    forwardBtn.addEventListener('click', () => {
-      alert('Пересылка пока не реализована');
-      document.getElementById('msg-context-menu').classList.remove('active');
-    });
-  }
-  document.addEventListener('click', (e) => {
-    const menu = document.getElementById('msg-context-menu');
-    if (menu && !menu.contains(e.target)) menu.classList.remove('active');
-  });
-});
+document.addEventListener('DOMContentLoaded', setupMessageContextMenu);
 
 // Сохранение черновиков
 document.addEventListener('DOMContentLoaded', () => {
@@ -5481,13 +5509,3 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
-
-// Очистка черновика после отправки
-const originalSendBtn = document.getElementById('btn-send');
-if (originalSendBtn) {
-  const oldSend = originalSendBtn.onclick;
-  originalSendBtn.onclick = function(e) {
-    if (currentChat) localStorage.removeItem('draft_' + currentChat.id);
-    if (oldSend) oldSend.call(this, e);
-  };
-}

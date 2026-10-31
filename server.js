@@ -30,12 +30,6 @@ const imageUpload = multer({
   limits: { fileSize: 15 * 1024 * 1024 },
   fileFilter: (req, file, cb) => cb(null, /^image\//.test(file.mimetype))
 });
-const upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 } });
-const imageUpload = multer({
-  storage,
-  limits: { fileSize: 15 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => cb(null, /^image\//.test(file.mimetype))
-});
 app.use(express.json({ limit: '2mb' }));
 const publicDir = path.join(__dirname, 'public');
 app.use(express.static(publicDir, {
@@ -285,6 +279,24 @@ db.exec(`
     winner INTEGER DEFAULT 0,
     PRIMARY KEY (giveaway_id, user_id)
   );
+  CREATE TABLE IF NOT EXISTS emoji_packs (
+    id TEXT PRIMARY KEY,
+    owner_id TEXT,
+    slug TEXT UNIQUE,
+    title TEXT,
+    description TEXT DEFAULT '',
+    is_public INTEGER DEFAULT 0,
+    official INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+  CREATE TABLE IF NOT EXISTS emojis (
+    id TEXT PRIMARY KEY,
+    pack_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    file_url TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (pack_id, name)
+  );
 `);
 
 db.exec(`
@@ -359,12 +371,25 @@ function canCreateEmojiPacks(user) {
   return !!user.is_premium;
 }
 
+const EMOJI_LIMITS = {
+  maxPacksPerUser: 3,
+  maxEmojisPerPack: 30,
+  maxEmojiSize: 256 * 1024,
+  maxEmojiName: 32
+};
+
+const emojiUpload = multer({
+  storage,
+  limits: { fileSize: EMOJI_LIMITS.maxEmojiSize },
+  fileFilter: (req, file, cb) => cb(null, /^image\/(png|webp|gif|jpeg)$/.test(file.mimetype))
+});
+
 function badgesFor(userId) {
   return db.prepare('SELECT id, icon, title, color FROM badges WHERE user_id = ? ORDER BY created_at ASC').all(userId)
     .map(b => ({ ...b, color: b.color || '' }));
 }
 
-function nftFor(userI d) {
+function nftFor(userId) {
   return db.prepare(`SELECT id, username, for_sale, price, listed_at
     FROM nft_usernames WHERE user_id = ? ORDER BY created_at ASC`).all(userId)
     .map(n => ({ id: n.id, username: n.username, forSale: !!n.for_sale, price: n.price || 0, listedAt: n.listed_at || null }));
@@ -726,6 +751,9 @@ app.post('/api/auth/login', (req, res) => {
   if (!String(user.password).startsWith('$2')) {
     db.prepare('UPDATE users SET password = ? WHERE id = ?').run(hashPassword(password), user.id);
   }
+  if (user.second_password) {
+    return res.json({ secondPasswordRequired: true, userId: user.id });
+  }
   const token = createSession(user.id);
   res.json({ token, user: getProfileById(user.id, true) });
 });
@@ -758,6 +786,33 @@ app.get('/api/auth/me', requireAuth, (req, res) => {
 /*  EMOJI PACKS                                                        */
 /* ------------------------------------------------------------------ */
 
+app.post('/api/emoji/packs', requireAuth, (req, res) => {
+  if (!canCreateEmojiPacks(req.user)) {
+    return res.status(403).json({ error: 'Создавать паки эмодзи может только Runa Premium' });
+  }
+  const slug = String(req.body.slug || '').trim().toLowerCase();
+  const title = String(req.body.title || '').trim();
+  const description = String(req.body.description || '').trim().slice(0, 200);
+  if (!/^[a-z0-9_]{2,24}$/.test(slug)) {
+    return res.status(400).json({ error: 'Slug: 2–24 символа, латиница, цифры и _' });
+  }
+  if (!title) return res.status(400).json({ error: 'Название обязательно' });
+  if (db.prepare('SELECT id FROM emoji_packs WHERE slug = ?').get(slug)) {
+    return res.status(400).json({ error: 'Такой slug уже занят' });
+  }
+  const count = db.prepare('SELECT COUNT(*) c FROM emoji_packs WHERE owner_id = ?').get(req.user.id).c;
+  if (count >= EMOJI_LIMITS.maxPacksPerUser) {
+    return res.status(400).json({ error: `Максимум ${EMOJI_LIMITS.maxPacksPerUser} пака` });
+  }
+  const id = uuidv4();
+  db.prepare(`INSERT INTO emoji_packs (id, owner_id, slug, title, description)
+    VALUES (?, ?, ?, ?, ?)`).run(id, req.user.id, slug, title, description);
+  res.json({
+    id, slug, title, description, official: false, isPublic: false,
+    ownerId: req.user.id, ownerUsername: req.user.username,
+    ownerName: req.user.display_name || req.user.username, mine: true, emojis: []
+  });
+});
 app.get('/api/emoji/packs', requireAuth, (req, res) => {
   const rows = db.prepare(`
     SELECT p.*, u.username AS owner_username, u.display_name AS owner_name
@@ -830,19 +885,6 @@ app.delete('/api/emoji/packs/:id', requireAuth, (req, res) => {
   db.prepare('DELETE FROM emojis WHERE pack_id = ?').run(pack.id);
   db.prepare('DELETE FROM emoji_packs WHERE id = ?').run(pack.id);
   res.json({ ok: true });
-});
-app.get('/api/emoji/all', requireAuth, (req, res) => {
-  const rows = db.prepare(`
-    SELECT p.slug AS pack_slug, e.name, e.file_url
-    FROM emojis e JOIN emoji_packs p ON p.id = e.pack_id
-    WHERE p.official = 1
-       OR p.owner_id = ?
-       OR (p.is_public = 1 AND ? = 1)
-  `).all(req.user.id, req.user.is_premium ? 1 : 0);
-
-  const map = {};
-  rows.forEach(r => { map[`:${r.pack_slug}/${r.name}:`] = r.file_url; });
-  res.json(map);
 });
 app.get('/api/emoji/all', requireAuth, (req, res) => {
   const rows = db.prepare(`
@@ -2630,6 +2672,7 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
-  console.log(`[CookieChat Server] Running on http://localhost:${PORT}`);
+const HOST = process.env.HOST || '127.0.0.1';
+server.listen(PORT, HOST, () => {
+  console.log(`[CookieChat Server] Running on http://${HOST}:${PORT}`);
 });

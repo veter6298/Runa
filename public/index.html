@@ -222,8 +222,8 @@
             <input type="file" id="media-file-input" style="display: none;">
             <input type="file" id="audio-file-input" accept="audio/*" style="display: none;">
             <button class="input-action-btn" id="btn-attach"><i data-lucide="paperclip"></i></button>
-            <button class="input-action-btn" id="btn-audio" title="Музыка"><i data-lucide="music"></i></button>
-            <button class="input-action-btn" id="btn-emoji" title="Эмодзи"><i data-lucide="smile"></i></button>
+            <button class="input-action-btn" id="btn-audio" title="Музыка"><i data-lucide="eighth-notes"></i></button>
+            <button class="input-action-btn" id="btn-emoji" title="Эмодзи"><i data-lucide="face-slightly-smiling"></i></button>
             <button class="input-action-btn" id="btn-stickers" title="Стикеры"><i data-lucide="sticker"></i></button>
             <textarea id="composer-textarea" rows="1" placeholder="Написать сообщение..."></textarea>
             <button class="send-message-btn" id="btn-send"><i data-lucide="arrow-up"></i></button>
@@ -279,7 +279,7 @@
         </button>
 
         <button class="drawer-nav-item" id="nav-emojis">
-  <div class="nav-icon-bg yellow"><i data-lucide="smile-plus"></i></div>
+  <div class="nav-icon-bg yellow"><i data-lucide="face-slightly-smiling-plus"></i></div>
   <span class="nav-title">Эмодзи</span>
   <i data-lucide="chevron-right" class="nav-arrow"></i>
         </button>
@@ -323,7 +323,7 @@
         <div class="drawer-divider"></div>
 
         <button class="drawer-nav-item" id="nav-accounts">
-          <div class="nav-icon-bg pink"><i data-lucide="users-2"></i></div>
+          <div class="nav-icon-bg pink"><i data-lucide="users-round"></i></div>
           <span class="nav-title">Аккаунты</span>
           <i data-lucide="chevron-right" class="nav-arrow"></i>
         </button>
@@ -497,7 +497,7 @@
             <label>Описание</label>
             <div class="with-emoji-btn">
               <input type="text" id="edit-bio-val" placeholder="Пара слов о себе">
-              <i data-lucide="smile"></i>
+              <i data-lucide="face-slightly-smiling"></i>
             </div>
           </div>
           <div class="form-row">
@@ -509,7 +509,7 @@
   <div class="track-edit-row">
     <span id="edit-track-name" style="opacity:.7;font-size:13px;">Не выбрано</span>
     <button class="mac-btn secondary" id="btn-upload-profile-track"><i data-lucide="upload"></i> Загрузить</button>
-    <button class="mac-btn secondary" id="btn-clear-profile-track"><i data-lucide="trash-2"></i></button>
+    <button class="mac-btn secondary" id="btn-clear-profile-track"><i data-lucide="trash"></i></button>
   </div>
           </div>
           <input type="file" id="profile-track-input" accept="audio/*" style="display: none;">
@@ -532,10 +532,10 @@
 
         <div class="edit-buttons-dock">
           <button class="dock-btn cancel" data-close="modal-edit-profile">
-            <i data-lucide="x-circle"></i> Отмена
+            <i data-lucide="circle-x"></i> Отмена
           </button>
           <button class="dock-btn save" id="btn-save-profile">
-            <i data-lucide="check-circle"></i> Сохранить
+            <i data-lucide="circle-check-big"></i> Сохранить
           </button>
         </div>
       </div>
@@ -567,7 +567,7 @@
           <span class="category-header">Внешность</span>
           <button class="custom-tab-btn active" data-tab="tab-avatar"><i data-lucide="user"></i> Аватар</button>
           <button class="custom-tab-btn" data-tab="tab-banner"><i data-lucide="image"></i> Баннер</button>
-          <button class="custom-tab-btn" data-tab="tab-style"><i data-lucide="layout"></i> Вид профиля</button>
+          <button class="custom-tab-btn" data-tab="tab-style"><i data-lucide="panels-top-left"></i> Вид профиля</button>
           <button class="custom-tab-btn" data-tab="tab-frame"><i data-lucide="circle-dot"></i> Рамка аватарки</button>
           <button class="custom-tab-btn" data-tab="tab-bg"><i data-lucide="paint-bucket"></i> Фон профиля</button>
 
@@ -604,7 +604,7 @@
             <h3 class="preview-name-label" id="custom-preview-name-1">test</h3>
           </div>
           <div class="controls-actions" style="justify-content:center; margin-bottom:16px;">
-            <button class="mac-btn secondary" id="btn-custom-avatar-remove"><i data-lucide="trash-2"></i> Удалить</button>
+            <button class="mac-btn secondary" id="btn-custom-avatar-remove"><i data-lucide="trash"></i> Удалить</button>
             <button class="mac-btn primary-purple" id="btn-custom-avatar-upload"><i data-lucide="upload"></i> Загрузить фото</button>
           </div>
 
@@ -652,7 +652,7 @@
         <!-- ВКЛАДКА: ВИД ПРОФИЛЯ -->
         <div class="custom-view-panel" id="tab-style" style="display: none;">
           <div class="settings-head-card">
-            <div class="head-icon blue"><i data-lucide="layout"></i></div>
+            <div class="head-icon blue"><i data-lucide="panels-top-left"></i></div>
             <div>
               <h4>Вид профиля</h4>
               <p>Как нарисована ваша карточка профиля. Её так видят все, кто её открыл.</p>
@@ -691,7 +691,7 @@
           </div>
           <div class="banner-preview" id="banner-preview"><span>Баннер не установлен</span></div>
           <div class="controls-actions" style="justify-content:flex-start;">
-            <button class="mac-btn secondary" id="btn-banner-remove"><i data-lucide="trash-2"></i> Удалить</button>
+            <button class="mac-btn secondary" id="btn-banner-remove"><i data-lucide="trash"></i> Удалить</button>
             <button class="mac-btn primary-purple" id="btn-banner-upload"><i data-lucide="upload"></i> Загрузить баннер</button>
           </div>
           <input type="file" id="banner-file-input" accept="image/*" style="display:none;">
@@ -817,7 +817,7 @@
             <div class="live-btn"><i data-lucide="message-circle"></i><span>Чат</span></div>
             <div class="live-btn"><i data-lucide="bell-off"></i><span>Звук</span></div>
             <div class="live-btn"><i data-lucide="phone"></i><span>Звонок</span></div>
-            <div class="live-btn"><i data-lucide="more-horizontal"></i><span>Ещё</span></div>
+            <div class="live-btn"><i data-lucide="ellipsis"></i><span>Ещё</span></div>
           </div>
 
           <div class="live-info-box">
@@ -1347,7 +1347,7 @@
           </span>
         </button>
         <div class="story-viewer-actions">
-          <button class="story-viewer-btn" id="story-delete-btn" title="Удалить историю" style="display:none;"><i data-lucide="trash-2"></i></button>
+          <button class="story-viewer-btn" id="story-delete-btn" title="Удалить историю" style="display:none;"><i data-lucide="trash"></i></button>
           <button class="story-viewer-btn" id="story-viewer-close" title="Закрыть"><i data-lucide="x"></i></button>
         </div>
       </div>
@@ -1478,15 +1478,6 @@
 
   <div id="toast-container"></div>
 
-  <div class="settings-menu-list" id="settings-menu-list">
-          <button class="s-item" data-setting="language"><i data-lucide="globe" class="icon purple"></i><span>Язык</span></button>
-          <button class="s-item" data-setting="privacy"><i data-lucide="hand" class="icon blue"></i><span>Конфиденциальность</span></button>
-          <button class="s-item" data-setting="devices"><i data-lucide="laptop" class="icon orange"></i><span>Устройства</span></button>
-          <button class="s-item" data-setting="security"><i data-lucide="shield-check" class="icon green"></i><span>Безопасность</span></button>
-          <button class="s-item" data-setting="2fa">
-  <i data-lucide="shield" class="icon green"></i><span>Второй пароль</span>
-          </button>
-
   <!-- ==================== ЭМОДЗИ: МОИ ПАКИ ==================== -->
 <div class="modal-backdrop" id="modal-emoji-packs" style="display: none;">
   <div class="list-window">
@@ -1556,22 +1547,46 @@
   <div id="emoji-panel-packs"></div>
                                    </div>
 
+  <!-- ==================== ВТОРОЙ ПАРОЛЬ ==================== -->
+  <div class="modal-backdrop" id="modal-2fa" style="display: none;">
+    <div class="list-window">
+      <div class="wallet-topbar">
+        <span class="wallet-header-title">Второй пароль</span>
+        <button class="win-btn close-btn" data-close="modal-2fa"><i data-lucide="x"></i></button>
+      </div>
+      <div class="list-modal-body" id="2fa-body"></div>
+    </div>
+  </div>
+
+  <!-- ==================== ВХОД СО ВТОРЫМ ПАРОЛЕМ ==================== -->
+  <div class="modal-backdrop" id="modal-2fa-login" style="display: none;">
+    <div class="list-window">
+      <div class="wallet-topbar">
+        <span class="wallet-header-title">Второй пароль</span>
+      </div>
+      <div class="list-modal-body">
+        <p style="opacity:.7;font-size:13px;margin-bottom:12px;">Введите второй пароль для входа в аккаунт.</p>
+        <input type="password" id="2fa-login-input" placeholder="Второй пароль" autocomplete="current-password"
+               style="width:100%;padding:12px;border-radius:12px;background:rgba(255,255,255,.06);border:0;color:inherit;margin-bottom:8px;">
+        <p id="2fa-login-error" style="display:none;color:#ff6961;font-size:12px;margin:0 0 10px;"></p>
+        <button class="mac-btn primary-purple" id="btn-2fa-login-submit" style="width:100%;">
+          <i data-lucide="shield-check"></i> Войти
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script src="/socket.io/socket.io.js"></script>
   <script src="/vendor/pako.min.js"></script>
   <script src="/vendor/lottie.min.js"></script>
   <script src="app.js"></script>
   <script src="social.js"></script>
 
-  <script src="2fa-login.js"></script>
 
 <div id="msg-context-menu" class="msg-context-menu" style="display: none;">
   <button id="ctx-reply-btn" class="ctx-btn"><i data-lucide="reply"></i> Ответить</button>
   <button id="ctx-forward-btn" class="ctx-btn"><i data-lucide="forward"></i> Переслать</button>
 </div>
   <script src="nft-phrases.js"></script>
-<div id="msg-context-menu" class="msg-context-menu" style="display: none;">
-  <button id="ctx-reply-btn" class="ctx-btn"><i data-lucide="reply"></i> Ответить</button>
-  <button id="ctx-forward-btn" class="ctx-btn"><i data-lucide="forward"></i> Переслать</button>
-</div>
 </body>
 </html>
