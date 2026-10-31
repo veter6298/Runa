@@ -30,6 +30,14 @@ const imageUpload = multer({
   limits: { fileSize: 15 * 1024 * 1024 },
   fileFilter: (req, file, cb) => cb(null, /^image\//.test(file.mimetype))
 });
+
+/* Пользовательские паки эмодзи (эндпоинты /api/emoji/*) */
+const EMOJI_LIMITS = { maxEmojiName: 32, maxEmojisPerPack: 120 };
+const emojiUpload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => cb(null, /^image\/(png|webp|gif|jpeg)$/.test(file.mimetype))
+});
 app.use(express.json({ limit: '2mb' }));
 const publicDir = path.join(__dirname, 'public');
 app.use(express.static(publicDir, {
